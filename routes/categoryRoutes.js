@@ -200,3 +200,21 @@ router.post('/add-subcategory', async (req, res) => {
 });
 
 module.exports = router;
+
+// POST /api/categories/add
+// Stores a new main category in the database (with optional image).
+
+// POST /api/categories/add-only-fresh
+// Stores "Only Fresh" category in the database.
+
+// POST /api/categories/add-only-mrp
+// Stores "Only MRP" category in the database.
+
+// POST /api/categories/add-mix-mrp
+// Stores "Mix (MRP)" category in the database.
+
+// POST /api/categories/create-or-add
+// Stores a new category only if it does not already exist.
+
+// POST /api/categories/add-subcategory
+// Stores a new sub-category in the database, linked to a main category.
