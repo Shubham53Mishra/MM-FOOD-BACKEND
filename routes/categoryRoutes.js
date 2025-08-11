@@ -3,6 +3,7 @@ const router = express.Router();
 const multer = require('multer');
 const cloudinary = require('cloudinary').v2;
 const Category = require('../models/Category');
+const SubCategory = require('../models/SubCategory');
 
 // Cloudinary config
 cloudinary.config({
@@ -15,7 +16,9 @@ cloudinary.config({
 const storage = multer.memoryStorage();
 const upload = multer({ storage });
 
-// Show all categories from DB
+// 1. Get all main categories
+// Method: GET
+// URL: http://localhost:5000/api/categories/all
 router.get('/all', async (req, res) => {
   try {
     const categories = await Category.find();
@@ -25,7 +28,14 @@ router.get('/all', async (req, res) => {
   }
 });
 
-// Add new category with image upload and DB storage
+// 2. Create a new main category
+// Method: POST
+// URL: http://localhost:5000/api/categories/add
+// Body: form-data or JSON
+//   name: "Only MRP"
+//   shortDescription: "MRP products only"
+//   quantity: 100
+//   image: (file, optional)
 router.post('/add', upload.single('image'), async (req, res) => {
   const { name, shortDescription, quantity } = req.body;
   if (!name || !shortDescription || !quantity) {
@@ -110,6 +120,82 @@ router.post('/add-mix-mrp', async (req, res) => {
     res.status(201).json({ message: "Mix (MRP) category added", category: newCategory });
   } catch (err) {
     res.status(500).json({ message: "Error saving category", error: err.message });
+  }
+});
+
+// 3. Create or add category only if it does not exist
+// Method: POST
+// URL: http://localhost:5000/api/categories/create-or-add
+// Body: JSON
+//   {
+//     "name": "Only Fresh",
+//     "shortDescription": "Fresh products only",
+//     "quantity": 80
+//   }
+router.post('/create-or-add', async (req, res) => {
+  const { name, shortDescription, quantity } = req.body;
+  if (!name || !shortDescription || !quantity) {
+    return res.status(400).json({ message: "All fields are required" });
+  }
+  try {
+    const existingCategory = await Category.findOne({ name });
+    if (existingCategory) {
+      return res.status(200).json({ message: "Category already exists", category: existingCategory });
+    }
+    const newCategory = new Category({
+      name,
+      shortDescription,
+      quantity
+    });
+    await newCategory.save();
+    res.status(201).json({ message: "New category created", category: newCategory });
+  } catch (err) {
+    res.status(500).json({ message: "Error processing category", error: err.message });
+  }
+});
+
+// 5. Get all categories with their sub-categories
+// Method: GET
+// URL: http://localhost:5000/api/categories/all-with-subcategories
+router.get('/all-with-subcategories', async (req, res) => {
+  try {
+    const categories = await Category.find();
+    const categoriesWithSubs = await Promise.all(
+      categories.map(async (cat) => {
+        const subCategories = await SubCategory.find({ category: cat._id });
+        return { ...cat.toObject(), subCategories };
+      })
+    );
+    res.json({ categories: categoriesWithSubs });
+  } catch (err) {
+    res.status(500).json({ message: 'Error fetching categories', error: err.message });
+  }
+});
+
+// 4. Add a sub-category to a main category
+// Method: POST
+// URL: http://localhost:5000/api/categories/add-subcategory
+// Body: JSON
+//   {
+//     "name": "MRP Snacks",
+//     "description": "Snacks under MRP",
+//     "categoryId": "<main_category_id>"
+//   }
+router.post('/add-subcategory', async (req, res) => {
+  const { name, description, categoryId } = req.body;
+  if (!name || !categoryId) {
+    return res.status(400).json({ message: "Sub-category name and categoryId are required" });
+  }
+  try {
+    const subCategory = new SubCategory({
+      name,
+      description,
+      category: categoryId
+    });
+    await subCategory.save();
+    res.status(201).json({ message: "Sub-category added", subCategory });
+  } catch (err) {
+    res.status(500).json({ message: "Error saving sub-category", error: err.message });
   }
 });
 

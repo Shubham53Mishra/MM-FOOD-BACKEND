@@ -1,0 +1,10 @@
+# Node modules folder ignore
+node_modules/
+
+# Environment variables ignore
+.env
+
+# Logs ignore
+npm-debug.log
+yarn-debug.log
+yarn-error.log
