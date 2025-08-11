@@ -4,6 +4,7 @@ const jwt = require('jsonwebtoken');
 
 exports.registerUser = async (req, res) => {
     try {
+        console.log('Register attempt:', req.body); // Log registration attempt
         const { fullName, email, mobile, password } = req.body;
 
         if (!fullName || !email || !mobile || !password) {
@@ -26,12 +27,14 @@ exports.registerUser = async (req, res) => {
 
         res.status(201).json({ message: "User registered successfully", user });
     } catch (error) {
+        console.error('Register error:', error.message); // Log error
         res.status(500).json({ message: error.message });
     }
 };
 
 exports.loginUser = async (req, res) => {
     try {
+        console.log('Login attempt:', req.body); // Log login attempt
         const { email, password } = req.body;
 
         if (!email || !password) {
@@ -56,6 +59,7 @@ exports.loginUser = async (req, res) => {
 
         res.json({ message: "Login successful", token });
     } catch (error) {
+        console.error('Login error:', error.message); // Log error
         res.status(500).json({ message: error.message });
     }
 };

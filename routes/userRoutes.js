@@ -1,15 +1,12 @@
 const express = require('express');
 const router = express.Router();
+const { registerUser, loginUser } = require('../controllers/auth.controller');
 
-router.post('/register', (req, res) => {
-  // Placeholder logic
-  res.json({ message: 'User registered successfully' });
-});
+// Use controller for register
+router.post('/register', registerUser);
 
-router.post('/login', (req, res) => {
-  // Placeholder logic
-  res.json({ message: 'User login successful' });
-});
+// Use controller for login
+router.post('/login', loginUser);
 
 router.post('/forgot-password', (req, res) => {
   // Placeholder logic
