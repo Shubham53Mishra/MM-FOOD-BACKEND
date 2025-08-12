@@ -16,6 +16,90 @@ cloudinary.config({
 const storage = multer.memoryStorage();
 const upload = multer({ storage });
 
+/*
+==========================
+CATEGORY & SUB-CATEGORY APIs
+==========================
+
+MAIN CATEGORY APIs
+
+1. Create main category
+   POST   /api/categories/add
+   Body: form-data (for image) or JSON
+     - name: "Snacks"
+     - shortDescription: "All snack items"
+     - quantity: 100
+     - image: (file, optional)
+   Result: Adds a new main category to the database.
+
+2. Get all main categories
+   GET    /api/categories/all
+   Result: Returns all main categories.
+
+3. Update main category
+   PUT    /api/categories/update/:id
+   Body: JSON
+     - name
+     - shortDescription
+     - quantity
+     - imageUrl (optional)
+   Result: Updates the main category with the given id.
+
+4. Delete main category
+   DELETE /api/categories/delete/:id
+   Result: Deletes the main category and all its sub-categories.
+
+5. Create or add category only if it does not exist
+   POST   /api/categories/create-or-add
+   Body: JSON
+     - name
+     - shortDescription
+     - quantity
+   Result: Adds a new category only if it doesn't already exist.
+
+SUB-CATEGORY APIs
+
+6. Create sub-category under a main category
+   POST   /api/categories/add-subcategory
+   Body: JSON
+     - name: "Mexican"
+     - description: "Mexican snacks"
+     - categoryId: "<main_category_id>"
+   Result: Adds a sub-category linked to the main category.
+
+7. Get all categories with their sub-categories
+   GET    /api/categories/all-with-subcategories
+   Result: Returns all categories, each with its sub-categories.
+
+8. Update sub-category
+   PUT    /api/categories/update-subcategory/:id
+   Body: JSON
+     - name
+     - description
+   Result: Updates the sub-category with the given id.
+
+9. Delete sub-category
+   DELETE /api/categories/delete-subcategory/:id
+   Result: Deletes the sub-category with the given id.
+
+------------------------------------------
+How it works:
+- Create main categories (e.g., Snacks, Meal, Vegan, Dessert, Drinks).
+- Create sub-categories (e.g., Mexican, Pak) and link them to a main category using its _id.
+- Update or delete any category or sub-category by their _id.
+- Fetch all categories and see their sub-categories grouped together.
+
+Example workflow:
+- Admin creates "Snacks" (main category).
+- Admin creates "Mexican" (sub-category) and links it to "Snacks" using Snacks' _id.
+- GET /api/categories/all-with-subcategories returns:
+  [
+    { name: "Snacks", subCategories: [ { name: "Mexican" }, ... ] },
+    ...
+  ]
+==========================
+*/
+
 // 1. Get all main categories
 // Method: GET
 // URL: http://localhost:5000/api/categories/all
@@ -172,15 +256,7 @@ router.get('/all-with-subcategories', async (req, res) => {
   }
 });
 
-// 4. Add a sub-category to a main category
-// Method: POST
-// URL: http://localhost:5000/api/categories/add-subcategory
-// Body: JSON
-//   {
-//     "name": "MRP Snacks",
-//     "description": "Snacks under MRP",
-//     "categoryId": "<main_category_id>"
-//   }
+// Add a sub-category under a main category (e.g., Snacks -> Mexican)
 router.post('/add-subcategory', async (req, res) => {
   const { name, description, categoryId } = req.body;
   if (!name || !categoryId) {
@@ -199,22 +275,76 @@ router.post('/add-subcategory', async (req, res) => {
   }
 });
 
+// Update main category
+// Method: PUT
+// URL: /api/categories/update/:id
+router.put('/update/:id', async (req, res) => {
+  const { name, shortDescription, quantity, imageUrl } = req.body;
+  try {
+    const updatedCategory = await Category.findByIdAndUpdate(
+      req.params.id,
+      { name, shortDescription, quantity, imageUrl },
+      { new: true }
+    );
+    if (!updatedCategory) {
+      return res.status(404).json({ message: "Category not found" });
+    }
+    res.json({ message: "Category updated", category: updatedCategory });
+  } catch (err) {
+    res.status(500).json({ message: "Error updating category", error: err.message });
+  }
+});
+
+// Delete main category
+// Method: DELETE
+// URL: /api/categories/delete/:id
+router.delete('/delete/:id', async (req, res) => {
+  try {
+    const deletedCategory = await Category.findByIdAndDelete(req.params.id);
+    if (!deletedCategory) {
+      return res.status(404).json({ message: "Category not found" });
+    }
+    // Optionally delete all sub-categories linked to this category
+    await SubCategory.deleteMany({ category: req.params.id });
+    res.json({ message: "Category and its sub-categories deleted" });
+  } catch (err) {
+    res.status(500).json({ message: "Error deleting category", error: err.message });
+  }
+});
+
+// Update sub-category
+// Method: PUT
+// URL: /api/categories/update-subcategory/:id
+router.put('/update-subcategory/:id', async (req, res) => {
+  const { name, description } = req.body;
+  try {
+    const updatedSubCategory = await SubCategory.findByIdAndUpdate(
+      req.params.id,
+      { name, description },
+      { new: true }
+    );
+    if (!updatedSubCategory) {
+      return res.status(404).json({ message: "Sub-category not found" });
+    }
+    res.json({ message: "Sub-category updated", subCategory: updatedSubCategory });
+  } catch (err) {
+    res.status(500).json({ message: "Error updating sub-category", error: err.message });
+  }
+});
+
+// Delete sub-category
+// Method: DELETE
+// URL: /api/categories/delete-subcategory/:id
+router.delete('/delete-subcategory/:id', async (req, res) => {
+  try {
+    const deletedSubCategory = await SubCategory.findByIdAndDelete(req.params.id);
+    if (!deletedSubCategory) {
+      return res.status(404).json({ message: "Sub-category not found" });
+    }
+    res.json({ message: "Sub-category deleted" });
+  } catch (err) {
+    res.status(500).json({ message: "Error deleting sub-category", error: err.message });
+  }
+});
+
 module.exports = router;
-
-// POST /api/categories/add
-// Stores a new main category in the database (with optional image).
-
-// POST /api/categories/add-only-fresh
-// Stores "Only Fresh" category in the database.
-
-// POST /api/categories/add-only-mrp
-// Stores "Only MRP" category in the database.
-
-// POST /api/categories/add-mix-mrp
-// Stores "Mix (MRP)" category in the database.
-
-// POST /api/categories/create-or-add
-// Stores a new category only if it does not already exist.
-
-// POST /api/categories/add-subcategory
-// Stores a new sub-category in the database, linked to a main category.
