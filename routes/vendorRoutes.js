@@ -4,6 +4,8 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const Vendor = require('../models/Vendor');
 const Category = require('../models/Category');
+const multer = require('multer');
+const cloudinary = require('cloudinary').v2;
 
 // Vendor signup
 router.post('/signup', async (req, res) => {
@@ -53,16 +55,50 @@ router.post('/login', async (req, res) => {
 
 // Middleware to verify vendor JWT
 function authVendor(req, res, next) {
-  const token = req.headers.authorization?.split(' ')[1];
-  if (!token) return res.status(401).json({ message: "No token provided" });
+  let token;
+  const authHeader = req.headers.authorization;
+  if (!authHeader) {
+    return res.status(401).json({ message: "Authorization header missing" });
+  }
+  // Accept both "Bearer <token>" and "<token>"
+  if (authHeader.startsWith('Bearer ')) {
+    token = authHeader.split(' ')[1];
+  } else {
+    token = authHeader;
+  }
+  if (!token) {
+    return res.status(401).json({ message: "No token provided" });
+  }
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     req.vendorId = decoded.id;
     next();
-  } catch {
+  } catch (err) {
     res.status(401).json({ message: "Invalid token" });
   }
 }
+
+// Get logged-in vendor profile
+router.get('/profile', authVendor, async (req, res) => {
+  try {
+    const vendor = await Vendor.findById(req.vendorId);
+    if (!vendor) {
+      return res.status(404).json({ message: "Vendor not found" });
+    }
+    // Always return mobile, even if empty
+    res.json({
+      name: vendor.name,
+      email: vendor.email,
+      mobile: vendor.mobile || "",
+      image: vendor.image,
+      city: vendor.city,
+      state: vendor.state,
+      address: vendor.address
+    });
+  } catch (err) {
+    res.status(500).json({ message: "Error fetching profile", error: err.message });
+  }
+});
 
 // Show categories for logged-in vendor
 router.get('/categories', authVendor, async (req, res) => {
@@ -77,6 +113,53 @@ router.get('/categories', authVendor, async (req, res) => {
 // Vendor logout (frontend should remove token)
 router.post('/logout', (req, res) => {
   res.json({ message: "Logout successful. Please remove token on client." });
+});
+
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET
+});
+
+const storage = multer.memoryStorage();
+const upload = multer({ storage });
+
+// Create vendor profile with image upload
+router.post('/profile', upload.single('image'), async (req, res) => {
+  const { name, email, mobile } = req.body;
+  if (!name || !email || !mobile) {
+    return res.status(400).json({ message: "All fields are required" });
+  }
+  let imageUrl = "";
+  if (req.file) {
+    try {
+      cloudinary.uploader.upload_stream(
+        { resource_type: 'image' },
+        async (error, result) => {
+          if (error) return res.status(500).json({ message: "Image upload failed", error: error.message });
+          imageUrl = result.secure_url;
+          const vendor = new Vendor({ name, email, mobile, image: imageUrl });
+          await vendor.save();
+          res.status(201).json({ message: "Profile created", vendor });
+        }
+      ).end(req.file.buffer);
+    } catch (err) {
+      return res.status(500).json({ message: "Image upload failed", error: err.message });
+    }
+  } else {
+    try {
+      const vendor = new Vendor({ name, email, mobile });
+      await vendor.save();
+      res.status(201).json({ message: "Profile created", vendor });
+    } catch (err) {
+      res.status(500).json({ message: "Error saving profile", error: err.message });
+    }
+  }
+});
+
+module.exports = router;
+    }
+  }
 });
 
 module.exports = router;
