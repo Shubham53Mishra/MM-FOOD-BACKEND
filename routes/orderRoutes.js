@@ -59,4 +59,31 @@ router.get('/vendor-orders', authVendor, async (req, res) => {
   }
 });
 
+// Vendor views all orders (admin or vendor with valid token)
+router.get('/all-orders', authVendor, async (req, res) => {
+  try {
+    const orders = await Order.find().populate('items.category items.subCategory vendor');
+    res.json({ orders });
+  } catch (err) {
+    res.status(500).json({ message: "Error fetching all orders", error: err.message });
+  }
+});
+
+// Vendor confirms an order
+router.put('/confirm/:orderId', authVendor, async (req, res) => {
+  try {
+    // Debug: log vendorId and orderId
+    console.log('Vendor:', req.vendorId, 'Order:', req.params.orderId);
+    const order = await Order.findOne({ _id: req.params.orderId, vendor: req.vendorId });
+    if (!order) {
+      return res.status(404).json({ message: "Order not found or not authorized" });
+    }
+    order.status = 'confirmed';
+    await order.save();
+    res.json({ message: "Order confirmed", order });
+  } catch (err) {
+    res.status(500).json({ message: "Error confirming order", error: err.message });
+  }
+});
+
 module.exports = router;
