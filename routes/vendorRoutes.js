@@ -42,9 +42,9 @@ router.post('/login', async (req, res) => {
     if (!isMatch) {
       return res.status(400).json({ message: "Invalid credentials" });
     }
-    // Check JWT_SECRET
-    if (!process.env.JWT_SECRET) {
-      return res.status(500).json({ message: "JWT_SECRET is not set in environment variables" });
+    // Check JWT_SECRET before using
+    if (!process.env.JWT_SECRET || typeof process.env.JWT_SECRET !== "string") {
+      return res.status(500).json({ message: "JWT_SECRET is missing. Please set it in your .env file and restart the server." });
     }
     const token = jwt.sign(
       { id: vendor._id, email: vendor.email },
