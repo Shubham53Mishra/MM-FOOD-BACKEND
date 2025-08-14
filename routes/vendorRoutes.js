@@ -42,6 +42,10 @@ router.post('/login', async (req, res) => {
     if (!isMatch) {
       return res.status(400).json({ message: "Invalid credentials" });
     }
+    // Check JWT_SECRET
+    if (!process.env.JWT_SECRET) {
+      return res.status(500).json({ message: "JWT_SECRET is not set in environment variables" });
+    }
     const token = jwt.sign(
       { id: vendor._id, email: vendor.email },
       process.env.JWT_SECRET,
@@ -157,5 +161,41 @@ router.post('/profile', upload.single('image'), async (req, res) => {
   }
 });
 
+// Update vendor profile (city, state, address, mobile, etc.)
+router.put('/profile', authVendor, async (req, res) => {
+  const { city, state, address, mobile, name, image } = req.body;
+  try {
+    const updateFields = {};
+    if (city !== undefined) updateFields.city = city;
+    if (state !== undefined) updateFields.state = state;
+    if (address !== undefined) updateFields.address = address;
+    if (mobile !== undefined) updateFields.mobile = mobile;
+    if (name !== undefined) updateFields.name = name;
+    if (image !== undefined) updateFields.image = image;
+
+    const vendor = await Vendor.findByIdAndUpdate(
+      req.vendorId,
+      { $set: updateFields },
+      { new: true }
+    );
+    if (!vendor) {
+      return res.status(404).json({ message: "Vendor not found" });
+    }
+    res.json({
+      message: "Profile updated",
+      vendor: {
+        name: vendor.name,
+        email: vendor.email,
+        mobile: vendor.mobile || "",
+        image: vendor.image,
+        city: vendor.city,
+        state: vendor.state,
+        address: vendor.address
+      }
+    });
+  } catch (err) {
+    res.status(500).json({ message: "Error updating profile", error: err.message });
+  }
+});
+
 module.exports = router;
- 
