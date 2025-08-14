@@ -7,8 +7,8 @@ const Category = require('../models/Category');
 
 // Vendor signup
 router.post('/signup', async (req, res) => {
-  const { name, email, password } = req.body;
-  if (!name || !email || !password) {
+  const { name, email, password, mobile } = req.body;
+  if (!name || !email || !password || !mobile) {
     return res.status(400).json({ message: "All fields are required" });
   }
   try {
@@ -17,7 +17,7 @@ router.post('/signup', async (req, res) => {
       return res.status(400).json({ message: "Vendor already exists" });
     }
     const hashedPassword = await bcrypt.hash(password, 10);
-    const vendor = new Vendor({ name, email, password: hashedPassword });
+    const vendor = new Vendor({ name, email, password: hashedPassword, mobile });
     await vendor.save();
     res.status(201).json({ message: "Vendor registered successfully" });
   } catch (err) {
