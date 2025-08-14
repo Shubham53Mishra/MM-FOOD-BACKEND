@@ -13,4 +13,8 @@ router.post('/forgot-password', (req, res) => {
   res.json({ message: 'Password reset link sent' });
 });
 
+router.post('/logout', (req, res) => {
+  res.json({ message: "Logout successful. Please remove token on client." });
+});
+
 module.exports = router;

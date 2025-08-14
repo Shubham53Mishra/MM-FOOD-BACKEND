@@ -74,4 +74,9 @@ router.get('/categories', authVendor, async (req, res) => {
   }
 });
 
+// Vendor logout (frontend should remove token)
+router.post('/logout', (req, res) => {
+  res.json({ message: "Logout successful. Please remove token on client." });
+});
+
 module.exports = router;
