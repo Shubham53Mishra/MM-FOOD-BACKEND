@@ -1,11 +1,10 @@
 const express = require('express');
+const cloudinary = require('cloudinary').v2;
+const multer = require('multer');
 const router = express.Router();
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const Vendor = require('../models/Vendor');
-const Category = require('../models/Category');
-const multer = require('multer');
-const cloudinary = require('cloudinary').v2;
 
 // Vendor signup
 router.post('/signup', async (req, res) => {
@@ -34,15 +33,18 @@ router.post('/login', async (req, res) => {
     return res.status(400).json({ message: "Email and password required" });
   }
   try {
-    const vendor = await Vendor.findOne({ email });
+    // Try selecting password explicitly, fallback if error
+    let vendor = await Vendor.findOne({ email }).select('+password');
     if (!vendor) {
-      return res.status(400).json({ message: "Invalid credentials" });
+      return res.status(400).json({ message: "Vendor not found" });
+    }
+    if (!vendor.password) {
+      return res.status(500).json({ message: "Password not found in vendor document. Check your Vendor schema." });
     }
     const isMatch = await bcrypt.compare(password, vendor.password);
     if (!isMatch) {
       return res.status(400).json({ message: "Invalid credentials" });
     }
-    // Check JWT_SECRET before using
     if (!process.env.JWT_SECRET || typeof process.env.JWT_SECRET !== "string") {
       return res.status(500).json({ message: "JWT_SECRET is missing. Please set it in your .env file and restart the server." });
     }
