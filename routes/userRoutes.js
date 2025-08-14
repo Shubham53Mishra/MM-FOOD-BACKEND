@@ -1,6 +1,13 @@
 const express = require('express');
 const router = express.Router();
 const { registerUser, loginUser } = require('../controllers/auth.controller');
+const { getProfile, updateProfile } = require('../controllers/user.controller');
+const auth = require('../middlewares/auth');
+// Get user profile
+router.get('/profile', auth, getProfile);
+
+// Update user profile
+router.put('/profile', auth, updateProfile);
 
 // Use controller for register
 router.post('/register', registerUser);
