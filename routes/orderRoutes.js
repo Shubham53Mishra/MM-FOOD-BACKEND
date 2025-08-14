@@ -86,4 +86,24 @@ router.put('/confirm/:orderId', authVendor, async (req, res) => {
   }
 });
 
+// Cancel an order (vendor or user can call this)
+router.put('/cancel/:orderId', async (req, res) => {
+  const { reason } = req.body;
+  if (!reason) {
+    return res.status(400).json({ message: "Cancellation reason is required" });
+  }
+  try {
+    const order = await Order.findById(req.params.orderId);
+    if (!order) {
+      return res.status(404).json({ message: "Order not found" });
+    }
+    order.status = 'cancelled';
+    order.cancelReason = reason;
+    await order.save();
+    res.json({ message: "Order cancelled", order });
+  } catch (err) {
+    res.status(500).json({ message: "Error cancelling order", error: err.message });
+  }
+});
+
 module.exports = router;

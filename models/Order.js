@@ -9,7 +9,8 @@ const orderSchema = new mongoose.Schema({
     quantity: Number
   }],
   vendor: { type: mongoose.Schema.Types.ObjectId, ref: 'Vendor', required: true },
-  status: { type: String, default: 'pending' }
+  status: { type: String, default: 'pending' },
+  cancelReason: { type: String }
 }, { timestamps: true });
 
 module.exports = mongoose.model('Order', orderSchema);
