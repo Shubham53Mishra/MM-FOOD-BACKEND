@@ -7,6 +7,7 @@ const Category = require('../models/Category');
 const SubCategory = require('../models/SubCategory');
 
 // Customer creates an order
+const User = require('../models/User');
 router.post('/create', async (req, res) => {
   const { customerName, customerEmail, items, vendorId } = req.body;
   if (!customerName || !customerEmail || !items || !vendorId) {
@@ -28,7 +29,10 @@ router.post('/create', async (req, res) => {
     }
   }
   try {
-    const order = new Order({ customerName, customerEmail, items, vendor: vendorId });
+    // Find user by email and get deliveryAddress
+    const user = await User.findOne({ email: customerEmail });
+    let deliveryAddress = user && user.deliveryAddress ? user.deliveryAddress : '';
+    const order = new Order({ customerName, customerEmail, items, vendor: vendorId, deliveryAddress });
     await order.save();
     res.status(201).json({ message: "Order placed", order });
   } catch (err) {

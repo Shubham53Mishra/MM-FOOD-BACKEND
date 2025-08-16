@@ -163,9 +163,9 @@ router.post('/profile', upload.single('image'), async (req, res) => {
   }
 });
 
-// Update vendor profile (city, state, address, mobile, etc.)
-router.put('/profile', authVendor, async (req, res) => {
-  const { city, state, address, mobile, name, image } = req.body;
+// Update vendor profile (city, state, address, mobile, etc.) with image upload
+router.put('/profile', authVendor, upload.single('image'), async (req, res) => {
+  const { city, state, address, mobile, name } = req.body;
   try {
     const updateFields = {};
     if (city !== undefined) updateFields.city = city;
@@ -173,7 +173,20 @@ router.put('/profile', authVendor, async (req, res) => {
     if (address !== undefined) updateFields.address = address;
     if (mobile !== undefined) updateFields.mobile = mobile;
     if (name !== undefined) updateFields.name = name;
-    if (image !== undefined) updateFields.image = image;
+
+    if (req.file && req.file.buffer) {
+      // Upload image to Cloudinary
+      await new Promise((resolve, reject) => {
+        cloudinary.uploader.upload_stream(
+          { resource_type: 'image' },
+          (error, result) => {
+            if (error) return reject(error);
+            updateFields.image = result.secure_url;
+            resolve();
+          }
+        ).end(req.file.buffer);
+      });
+    }
 
     const vendor = await Vendor.findByIdAndUpdate(
       req.vendorId,
