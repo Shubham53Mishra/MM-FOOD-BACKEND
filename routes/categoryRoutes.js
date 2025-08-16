@@ -241,13 +241,15 @@ router.post('/create-or-add', async (req, res) => {
 // 5. Get all categories with their sub-categories
 // Method: GET
 // URL: http://localhost:5000/api/categories/all-with-subcategories
+const MealBox = require('../models/MealBox');
 router.get('/all-with-subcategories', async (req, res) => {
   try {
     const categories = await Category.find();
     const categoriesWithSubs = await Promise.all(
       categories.map(async (cat) => {
         const subCategories = await SubCategory.find({ category: cat._id });
-        return { ...cat.toObject(), subCategories };
+        const mealBoxes = await MealBox.find({ category: cat._id });
+        return { ...cat.toObject(), subCategories, mealBoxes };
       })
     );
     res.json({ categories: categoriesWithSubs });
