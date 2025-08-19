@@ -1,6 +1,5 @@
 const mongoose = require('mongoose');
-//some things todays
-
+//some things todays rule to change
 const connectDB = async () => {
   try {
   await mongoose.connect(process.env.MONGO_URI);
