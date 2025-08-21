@@ -1,5 +1,15 @@
+
+const express = require('express');
+const router = express.Router();
 const Vendor = require('../models/Vendor');
 const Category = require('../models/Category');
+const { registerUser, loginUser } = require('../controllers/auth.controller');
+const { getProfile, updateProfile, addDeliveryAddress, getDeliveryAddresses, updateAddress } = require('../controllers/user.controller');
+const auth = require('../middlewares/auth');
+const multer = require('multer');
+const storage = multer.memoryStorage();
+const upload = multer({ storage });
+
 // Get vendors for a category
 router.get('/category/:id/vendors', async (req, res) => {
   try {
@@ -12,14 +22,6 @@ router.get('/category/:id/vendors', async (req, res) => {
 });
 // Update only address for user 
 router.put('/address', auth, updateAddress);
-const express = require('express');
-const router = express.Router();
-const { registerUser, loginUser } = require('../controllers/auth.controller');
-const { getProfile, updateProfile, addDeliveryAddress, getDeliveryAddresses } = require('../controllers/user.controller');
-const auth = require('../middlewares/auth');
-const multer = require('multer');
-const storage = multer.memoryStorage();
-const upload = multer({ storage });
 
 // Get all delivery addresses
 router.get('/address', auth, getDeliveryAddresses);
