@@ -1,4 +1,4 @@
-// Update only address for user
+// Update only address for user side
 router.put('/address', auth, updateAddress);
 const express = require('express');
 const router = express.Router();
