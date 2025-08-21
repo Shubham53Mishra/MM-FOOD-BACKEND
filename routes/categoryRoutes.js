@@ -244,7 +244,6 @@ router.post('/create-or-add', async (req, res) => {
 // URL: http://localhost:5000/api/categories/all-with-subcategories
 const MealBox = require('../models/MealBox');
 // Categories with their sub-categories and meal boxes
-const MealBox = require('../models/MealBox');
 router.get('/all-with-subcategories', async (req, res) => {
   try {
     const categories = await Category.find();
