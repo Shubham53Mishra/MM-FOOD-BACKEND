@@ -8,7 +8,8 @@ const vendorSchema = new mongoose.Schema({
   image: { type: String }, // Cloudinary image URL
   city: { type: String },
   state: { type: String },
-  address: { type: String }
+  address: { type: String },
+  category: { type: mongoose.Schema.Types.ObjectId, ref: 'Category' }
 });
 
 module.exports = mongoose.model('Vendor', vendorSchema);

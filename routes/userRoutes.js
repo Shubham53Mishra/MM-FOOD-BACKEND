@@ -1,3 +1,15 @@
+const Vendor = require('../models/Vendor');
+const Category = require('../models/Category');
+// Get vendors for a category
+router.get('/category/:id/vendors', async (req, res) => {
+  try {
+    const categoryId = req.params.id;
+    const vendors = await Vendor.find({ category: categoryId });
+    res.json({ vendors });
+  } catch (err) {
+    res.status(500).json({ message: 'Server error' });
+  }
+});
 // Update only address for user 
 router.put('/address', auth, updateAddress);
 const express = require('express');
