@@ -1,3 +1,22 @@
+// Update only address for user
+exports.updateAddress = async (req, res) => {
+	try {
+		const { address, city, state } = req.body;
+		const updateFields = {};
+		if (address !== undefined) updateFields.address = address;
+		if (city !== undefined) updateFields.city = city;
+		if (state !== undefined) updateFields.state = state;
+		const updated = await User.findByIdAndUpdate(
+			req.user.id,
+			updateFields,
+			{ new: true, runValidators: true }
+		).select('-password');
+		if (!updated) return res.status(404).json({ message: 'User not found' });
+		res.json(updated);
+	} catch (err) {
+		res.status(500).json({ message: 'Server error' });
+	}
+};
 // Get all delivery addresses
 exports.getDeliveryAddresses = async (req, res) => {
 	try {

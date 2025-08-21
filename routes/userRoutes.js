@@ -1,3 +1,5 @@
+// Update only address for user
+router.put('/address', auth, updateAddress);
 const express = require('express');
 const router = express.Router();
 const { registerUser, loginUser } = require('../controllers/auth.controller');
