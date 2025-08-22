@@ -129,7 +129,7 @@ Example workflow:
 // Only main categories
 router.get('/all', async (req, res) => {
   try {
-    const categories = await Category.find();
+    const categories = await Category.find({}, 'name');
     res.json({ categories });
   } catch (err) {
     res.status(500).json({ message: 'Error fetching categories', error: err.message });
@@ -144,51 +144,21 @@ router.get('/all', async (req, res) => {
 //   shortDescription: "MRP products only"
 //   quantity: 100
 //   image: (file, optional)
-router.post('/add', auth, upload.single('image'), async (req, res) => {
-  const { name, shortDescription, quantity } = req.body;
-  if (!name || !shortDescription || !quantity) {
-    return res.status(400).json({ message: "All fields are required" });
+router.post('/add', auth, async (req, res) => {
+  const { name } = req.body;
+  if (!name) {
+    return res.status(400).json({ message: "Name is required" });
   }
-  let imageUrl = "";
   const vendorId = req.user && req.user.id ? req.user.id : null;
   if (!vendorId) {
     return res.status(401).json({ message: "Vendor authentication required" });
   }
-  if (req.file) {
-    try {
-      cloudinary.uploader.upload_stream(
-        { resource_type: 'image' },
-        async (error, result) => {
-          if (error) return res.status(500).json({ message: "Image upload failed", error: error.message });
-          imageUrl = result.secure_url;
-          const newCategory = new Category({
-            name,
-            shortDescription,
-            quantity,
-            imageUrl,
-            vendor: vendorId
-          });
-          await newCategory.save();
-          res.status(201).json({ message: "Category added", category: newCategory });
-        }
-      ).end(req.file.buffer);
-    } catch (err) {
-      return res.status(500).json({ message: "Image upload failed", error: err.message });
-    }
-  } else {
-    try {
-      const newCategory = new Category({
-        name,
-        shortDescription,
-        quantity,
-        imageUrl,
-        vendor: vendorId
-      });
-      await newCategory.save();
-      res.status(201).json({ message: "Category added", category: newCategory });
-    } catch (err) {
-      res.status(500).json({ message: "Error saving category", error: err.message });
-    }
+  try {
+    const newCategory = new Category({ name, vendor: vendorId });
+    await newCategory.save();
+    res.status(201).json({ message: "Category added", category: { name: newCategory.name } });
+  } catch (err) {
+    res.status(500).json({ message: "Error saving category", error: err.message });
   }
 });
 
