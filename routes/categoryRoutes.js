@@ -1,3 +1,23 @@
+// Get all categories and subcategories for the logged-in vendor
+router.get('/my-categories-with-subcategories', auth, async (req, res) => {
+  try {
+    const vendorId = req.user && req.user.id ? req.user.id : null;
+    if (!vendorId) {
+      return res.status(401).json({ message: 'Vendor authentication required' });
+    }
+    // Find categories created by this vendor
+    const categories = await Category.find({ vendor: vendorId });
+    const categoriesWithSubs = await Promise.all(
+      categories.map(async (cat) => {
+        const subCategories = await SubCategory.find({ category: cat._id });
+        return { ...cat.toObject(), subCategories };
+      })
+    );
+    res.json({ categories: categoriesWithSubs });
+  } catch (err) {
+    res.status(500).json({ message: 'Error fetching categories', error: err.message });
+  }
+});
 const express = require('express');
 const router = express.Router();
 const multer = require('multer');
@@ -268,21 +288,53 @@ router.get('/all-with-subcategories', async (req, res) => {
 });
 
 // Add a sub-category under a main category (e.g., Snacks -> Mexican)
-router.post('/add-subcategory', async (req, res) => {
-  const { name, description, categoryId } = req.body;
+router.post('/add-subcategory', auth, upload.single('image'), async (req, res) => {
+  const { name, description, pricePerUnit, categoryId } = req.body;
+  const vendorId = req.user && req.user.id ? req.user.id : null;
+  if (!vendorId) {
+    return res.status(401).json({ message: "Vendor authentication required" });
+  }
   if (!name || !categoryId) {
     return res.status(400).json({ message: "Sub-category name and categoryId are required" });
   }
-  try {
-    const subCategory = new SubCategory({
-      name,
-      description,
-      category: categoryId
-    });
-    await subCategory.save();
-    res.status(201).json({ message: "Sub-category added", subCategory });
-  } catch (err) {
-    res.status(500).json({ message: "Error saving sub-category", error: err.message });
+  let imageUrl = "";
+  if (req.file) {
+    try {
+      cloudinary.uploader.upload_stream(
+        { resource_type: 'image' },
+        async (error, result) => {
+          if (error) return res.status(500).json({ message: "Image upload failed", error: error.message });
+          imageUrl = result.secure_url;
+          const subCategory = new SubCategory({
+            name,
+            description,
+            pricePerUnit,
+            imageUrl,
+            category: categoryId,
+            vendor: vendorId
+          });
+          await subCategory.save();
+          res.status(201).json({ message: "Sub-category added", subCategory });
+        }
+      ).end(req.file.buffer);
+    } catch (err) {
+      return res.status(500).json({ message: "Image upload failed", error: err.message });
+    }
+  } else {
+    try {
+      const subCategory = new SubCategory({
+        name,
+        description,
+        pricePerUnit,
+        imageUrl,
+        category: categoryId,
+        vendor: vendorId
+      });
+      await subCategory.save();
+      res.status(201).json({ message: "Sub-category added", subCategory });
+    } catch (err) {
+      res.status(500).json({ message: "Error saving sub-category", error: err.message });
+    }
   }
 });
 
