@@ -4,6 +4,7 @@ const multer = require('multer');
 const cloudinary = require('cloudinary').v2;
 const Category = require('../models/Category');
 const SubCategory = require('../models/SubCategory');
+const auth = require('../middlewares/auth');
 
 // Cloudinary config
 cloudinary.config({
@@ -121,12 +122,16 @@ router.get('/all', async (req, res) => {
 //   shortDescription: "MRP products only"
 //   quantity: 100
 //   image: (file, optional)
-router.post('/add', upload.single('image'), async (req, res) => {
+router.post('/add', auth, upload.single('image'), async (req, res) => {
   const { name, shortDescription, quantity } = req.body;
   if (!name || !shortDescription || !quantity) {
     return res.status(400).json({ message: "All fields are required" });
   }
   let imageUrl = "";
+  const vendorId = req.user && req.user.id ? req.user.id : null;
+  if (!vendorId) {
+    return res.status(401).json({ message: "Vendor authentication required" });
+  }
   if (req.file) {
     try {
       cloudinary.uploader.upload_stream(
@@ -138,7 +143,8 @@ router.post('/add', upload.single('image'), async (req, res) => {
             name,
             shortDescription,
             quantity,
-            imageUrl
+            imageUrl,
+            vendor: vendorId
           });
           await newCategory.save();
           res.status(201).json({ message: "Category added", category: newCategory });
@@ -153,7 +159,8 @@ router.post('/add', upload.single('image'), async (req, res) => {
         name,
         shortDescription,
         quantity,
-        imageUrl
+        imageUrl,
+        vendor: vendorId
       });
       await newCategory.save();
       res.status(201).json({ message: "Category added", category: newCategory });
