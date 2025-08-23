@@ -261,7 +261,7 @@ router.get('/all-with-subcategories', async (req, res) => {
 
 // Add a sub-category under a main category (e.g., Snacks -> Mexican)
 router.post('/add-subcategory', auth, upload.single('image'), async (req, res) => {
-  const { name, description, pricePerUnit, categoryId } = req.body;
+  const { name, description, pricePerUnit, quantity, categoryId } = req.body;
   const vendorId = req.user && req.user.id ? req.user.id : null;
   if (!vendorId) {
     return res.status(401).json({ message: "Vendor authentication required" });
@@ -281,6 +281,7 @@ router.post('/add-subcategory', auth, upload.single('image'), async (req, res) =
             name,
             description,
             pricePerUnit,
+            quantity,
             imageUrl,
             category: categoryId,
             vendor: vendorId
@@ -298,6 +299,7 @@ router.post('/add-subcategory', auth, upload.single('image'), async (req, res) =
         name,
         description,
         pricePerUnit,
+        quantity,
         imageUrl,
         category: categoryId,
         vendor: vendorId
@@ -351,11 +353,18 @@ router.delete('/delete/:id', async (req, res) => {
 // Method: PUT
 // URL: /api/categories/update-subcategory/:id
 router.put('/update-subcategory/:id', async (req, res) => {
-  const { name, description } = req.body;
+  const { name, description, pricePerUnit, imageUrl, category, vendor } = req.body;
   try {
+    const updateFields = {};
+    if (name !== undefined) updateFields.name = name;
+    if (description !== undefined) updateFields.description = description;
+    if (pricePerUnit !== undefined) updateFields.pricePerUnit = pricePerUnit;
+    if (imageUrl !== undefined) updateFields.imageUrl = imageUrl;
+    if (category !== undefined) updateFields.category = category;
+    if (vendor !== undefined) updateFields.vendor = vendor;
     const updatedSubCategory = await SubCategory.findByIdAndUpdate(
       req.params.id,
-      { name, description },
+      updateFields,
       { new: true }
     );
     if (!updatedSubCategory) {
