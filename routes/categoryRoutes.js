@@ -314,11 +314,11 @@ router.post('/add-subcategory', auth, upload.single('image'), async (req, res) =
 // Method: PUT
 // URL: /api/categories/update/:id
 router.put('/update/:id', async (req, res) => {
-  const { name, shortDescription, quantity, imageUrl } = req.body;
+  const { name } = req.body;
   try {
     const updatedCategory = await Category.findByIdAndUpdate(
       req.params.id,
-      { name, shortDescription, quantity, imageUrl },
+      { name },
       { new: true }
     );
     if (!updatedCategory) {
