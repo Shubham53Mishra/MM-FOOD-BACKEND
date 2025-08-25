@@ -38,7 +38,7 @@ router.get('/my-categories-with-subcategories', auth, async (req, res) => {
     const categories = await Category.find({ vendor: vendorId });
     const categoriesWithSubs = await Promise.all(
       categories.map(async (cat) => {
-        const subCategories = await SubCategory.find({ category: cat._id });
+    const subCategories = await SubCategory.find({ category: cat._id, vendor: vendorId });
         return { ...cat.toObject(), subCategories };
       })
     );
