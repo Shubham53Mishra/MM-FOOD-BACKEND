@@ -1,3 +1,23 @@
+// Vendor can update subcategory availability
+router.put('/update-subcategory-availability/:id', auth, async (req, res) => {
+  const { available } = req.body;
+  if (typeof available !== 'boolean') {
+    return res.status(400).json({ message: 'Available field must be true or false' });
+  }
+  try {
+    const subCategory = await SubCategory.findByIdAndUpdate(
+      req.params.id,
+      { available },
+      { new: true }
+    );
+    if (!subCategory) {
+      return res.status(404).json({ message: 'Sub-category not found' });
+    }
+    res.json({ message: 'Availability updated', subCategory });
+  } catch (err) {
+    res.status(500).json({ message: 'Error updating availability', error: err.message });
+  }
+});
 
 const express = require('express');
 const router = express.Router();

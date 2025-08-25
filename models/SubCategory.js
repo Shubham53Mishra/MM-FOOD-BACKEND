@@ -7,7 +7,8 @@ const subCategorySchema = new mongoose.Schema({
   quantity: { type: Number },
   imageUrl: { type: String },
   category: { type: mongoose.Schema.Types.ObjectId, ref: 'Category', required: true },
-  vendor: { type: mongoose.Schema.Types.ObjectId, ref: 'Vendor' }
+  vendor: { type: mongoose.Schema.Types.ObjectId, ref: 'Vendor' },
+  available: { type: Boolean, default: true }
 });
 
 module.exports = mongoose.model('SubCategory', subCategorySchema);
