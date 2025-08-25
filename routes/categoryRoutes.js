@@ -147,9 +147,13 @@ Example workflow:
 // Method: GET
 // URL: http://localhost:5000/api/categories/all
 // Only main categories
-router.get('/all', async (req, res) => {
+router.get('/all', auth, async (req, res) => {
   try {
-    const categories = await Category.find({}, '_id name');
+    const vendorId = req.user && req.user.id ? req.user.id : null;
+    if (!vendorId) {
+      return res.status(401).json({ message: 'Vendor authentication required' });
+    }
+    const categories = await Category.find({ vendor: vendorId }, '_id name');
     res.json({ categories });
   } catch (err) {
     res.status(500).json({ message: 'Error fetching categories', error: err.message });
