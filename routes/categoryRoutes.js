@@ -1,3 +1,10 @@
+const express = require('express');
+const router = express.Router();
+const multer = require('multer');
+const cloudinary = require('cloudinary').v2;
+const Category = require('../models/Category');
+const SubCategory = require('../models/SubCategory');
+const auth = require('../middlewares/auth');
 
 // Vendor can update subcategory availability
 router.put('/update-subcategory-availability/:id', auth, async (req, res) => {
@@ -19,14 +26,6 @@ router.put('/update-subcategory-availability/:id', auth, async (req, res) => {
     res.status(500).json({ message: 'Error updating availability', error: err.message });
   }
 });
-
-const express = require('express');
-const router = express.Router();
-const multer = require('multer');
-const cloudinary = require('cloudinary').v2;
-const Category = require('../models/Category');
-const SubCategory = require('../models/SubCategory');
-const auth = require('../middlewares/auth');
 
 // Get all categories and subcategories for the logged-in vendor
 router.get('/my-categories-with-subcategories', auth, async (req, res) => {
