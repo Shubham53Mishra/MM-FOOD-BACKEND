@@ -1,5 +1,3 @@
-const express = require('express');
-const router = express.Router();
 
 // Vendor can update subcategory availability
 router.put('/update-subcategory-availability/:id', auth, async (req, res) => {
