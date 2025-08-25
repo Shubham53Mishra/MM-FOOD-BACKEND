@@ -3,6 +3,7 @@ const mongoose = require('mongoose');
 const orderSchema = new mongoose.Schema({
   customerName: { type: String, required: true },
   customerEmail: { type: String, required: true },
+  customerMobile: { type: String },
   items: [{ 
     category: { type: mongoose.Schema.Types.ObjectId, ref: 'Category' },
     subCategory: { type: mongoose.Schema.Types.ObjectId, ref: 'SubCategory' },

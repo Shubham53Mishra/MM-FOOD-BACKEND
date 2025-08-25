@@ -29,10 +29,11 @@ router.post('/create', async (req, res) => {
     }
   }
   try {
-    // Find user by email and get deliveryAddress
+    // Find user by email and get deliveryAddress and mobile
     const user = await User.findOne({ email: customerEmail });
     let deliveryAddress = user && user.deliveryAddress ? user.deliveryAddress : '';
-    const order = new Order({ customerName, customerEmail, items, vendor: vendorId, deliveryAddress });
+    let customerMobile = user && user.mobile ? user.mobile : '';
+    const order = new Order({ customerName, customerEmail, items, vendor: vendorId, deliveryAddress, customerMobile });
     await order.save();
     res.status(201).json({ message: "Order placed", order });
   } catch (err) {
@@ -57,7 +58,17 @@ function authVendor(req, res, next) {
 router.get('/vendor-orders', authVendor, async (req, res) => {
   try {
     const orders = await Order.find({ vendor: req.vendorId }).populate('items.category items.subCategory');
-    res.json({ orders });
+    // Add mobile number to each order in response
+    const ordersWithMobile = await Promise.all(orders.map(async (order) => {
+      let mobile = order.customerMobile;
+      // If not present, fetch from user
+      if (!mobile && order.customerEmail) {
+        const user = await User.findOne({ email: order.customerEmail });
+        mobile = user && user.mobile ? user.mobile : '';
+      }
+      return { ...order.toObject(), customerMobile: mobile };
+    }));
+    res.json({ orders: ordersWithMobile });
   } catch (err) {
     res.status(500).json({ message: "Error fetching orders", error: err.message });
   }
