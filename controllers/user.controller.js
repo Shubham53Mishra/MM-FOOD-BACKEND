@@ -1,3 +1,19 @@
+// Save favorite subcategories for user
+exports.saveFavoriteSubCategories = async (req, res) => {
+	try {
+		const { subCategoryIds } = req.body; // array of subcategory ObjectIds
+		if (!Array.isArray(subCategoryIds) || subCategoryIds.length === 0) {
+			return res.status(400).json({ message: 'subCategoryIds must be a non-empty array' });
+		}
+		const user = await User.findById(req.user.id);
+		if (!user) return res.status(404).json({ message: 'User not found' });
+		user.favoriteSubCategories = subCategoryIds;
+		await user.save();
+		res.json({ message: 'Favorite subcategories saved', favoriteSubCategories: user.favoriteSubCategories });
+	} catch (err) {
+		res.status(500).json({ message: 'Server error' });
+	}
+};
 // Update only address for user
 exports.updateAddress = async (req, res) => {
 	try {

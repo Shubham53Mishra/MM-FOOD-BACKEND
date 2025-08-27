@@ -17,7 +17,8 @@ const userSchema = new mongoose.Schema({
       pincode: { type: String },
       label: { type: String } // e.g. Home, Work
     }
-  ]
+  ],
+  favoriteSubCategories: [{ type: mongoose.Schema.Types.ObjectId, ref: 'SubCategory' }]
 });
 
 module.exports = mongoose.model('User', userSchema);

@@ -7,6 +7,7 @@ const orderSchema = new mongoose.Schema({
   items: [{ 
     category: { type: mongoose.Schema.Types.ObjectId, ref: 'Category' },
     subCategory: { type: mongoose.Schema.Types.ObjectId, ref: 'SubCategory' },
+    mealBox: { type: mongoose.Schema.Types.ObjectId, ref: 'MealBox' },
     quantity: Number
   }],
   vendor: { type: mongoose.Schema.Types.ObjectId, ref: 'Vendor', required: true },

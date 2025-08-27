@@ -1,14 +1,15 @@
-
 const express = require('express');
 const router = express.Router();
 const Vendor = require('../models/Vendor');
 const Category = require('../models/Category');
 const { registerUser, loginUser } = require('../controllers/auth.controller');
-const { getProfile, updateProfile, addDeliveryAddress, getDeliveryAddresses, updateAddress } = require('../controllers/user.controller');
+const { getProfile, updateProfile, addDeliveryAddress, getDeliveryAddresses, updateAddress, saveFavoriteSubCategories } = require('../controllers/user.controller');
 const auth = require('../middlewares/auth');
 const multer = require('multer');
 const storage = multer.memoryStorage();
 const upload = multer({ storage });
+// Save favorite subcategories for user
+router.post('/favorite-subcategories', auth, saveFavoriteSubCategories);
 
 // Get vendors for a category
 router.get('/category/:id/vendors', async (req, res) => {

@@ -27,6 +27,12 @@ router.post('/create', async (req, res) => {
         return res.status(400).json({ message: `SubCategory ID ${item.subCategory} not found` });
       }
     }
+    if (item.mealBox) {
+      const mealBoxExists = await require('../models/MealBox').findById(item.mealBox);
+      if (!mealBoxExists) {
+        return res.status(400).json({ message: `MealBox ID ${item.mealBox} not found` });
+      }
+    }
   }
   try {
     // Find user by email and get deliveryAddress and mobile
