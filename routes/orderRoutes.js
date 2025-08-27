@@ -1,3 +1,12 @@
+const express = require('express');
+const router = express.Router();
+const Order = require('../models/Order');
+const jwt = require('jsonwebtoken');
+const Vendor = require('../models/Vendor');
+const Category = require('../models/Category');
+const SubCategory = require('../models/SubCategory');
+const User = require('../models/User');
+
 // Get total order count
 router.get('/count', async (req, res) => {
   try {
@@ -7,29 +16,14 @@ router.get('/count', async (req, res) => {
     res.status(500).json({ message: 'Error fetching order count', error: err.message });
   }
 });
-const express = require('express');
-const router = express.Router();
-const Order = require('../models/Order');
-const jwt = require('jsonwebtoken');
-const Vendor = require('../models/Vendor');
-const Category = require('../models/Category');
-const SubCategory = require('../models/SubCategory');
-
-// Customer creates an order
-const User = require('../models/User');
 router.post('/create', async (req, res) => {
   const { customerName, customerEmail, items, vendorId } = req.body;
   if (!customerName || !customerEmail || !items || !vendorId) {
-    return res.status(400).json({ message: "All fields are required" });
+    return res.status(400).json({ message: "Missing required fields" });
   }
-  // Validate category_id and subcategory_id
+
+  // Validate each item for subCategory and mealBox existence
   for (const item of items) {
-    if (item.category) {
-      const categoryExists = await Category.findById(item.category);
-      if (!categoryExists) {
-        return res.status(400).json({ message: `Category ID ${item.category} not found` });
-      }
-    }
     if (item.subCategory) {
       const subCategoryExists = await SubCategory.findById(item.subCategory);
       if (!subCategoryExists) {
@@ -43,6 +37,7 @@ router.post('/create', async (req, res) => {
       }
     }
   }
+
   try {
     // Find user by email and get deliveryAddress and mobile
     const user = await User.findOne({ email: customerEmail });
