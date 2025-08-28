@@ -11,7 +11,9 @@ const mealBoxSchema = new mongoose.Schema({
   actualImage: String,   // Cloudinary URL
   items: [{ name: String, description: String }],
   packagingDetails: String,
-  category: { type: mongoose.Schema.Types.ObjectId, ref: 'Category' }
+  categories: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Category' }],
+  subCategories: [{ type: mongoose.Schema.Types.ObjectId, ref: 'SubCategory' }],
+  email: { type: String }
 });
 
 module.exports = mongoose.model('MealBox', mealBoxSchema);
