@@ -1,4 +1,5 @@
 const MealBox = require('../models/MealBox');
+const fs = require('fs');
 const { uploadImage } = require('../services/cloudinaryService');
 
 // Create meal box
