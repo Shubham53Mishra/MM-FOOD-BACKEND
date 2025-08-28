@@ -1,5 +1,41 @@
 const express = require('express');
 const router = express.Router();
+// ...existing code...
+// ...existing code...
+// Get single subcategory by ID (including reviews)
+router.get('/subcategory/:id', async (req, res) => {
+  try {
+    const subCategory = await SubCategory.findById(req.params.id);
+    if (!subCategory) {
+      return res.status(404).json({ message: 'Sub-category not found' });
+    }
+    res.json({ subCategory });
+  } catch (err) {
+    res.status(500).json({ message: 'Error fetching sub-category', error: err.message });
+  }
+});
+// Add review to subcategory
+router.post('/add-review/:subCategoryId', async (req, res) => {
+  const { rating, comment } = req.body;
+  const userId = req.user && req.user.id ? req.user.id : null;
+  if (!userId) {
+    return res.status(401).json({ message: "User authentication required" });
+  }
+  if (!rating || rating < 1 || rating > 5) {
+    return res.status(400).json({ message: "Rating must be between 1 and 5" });
+  }
+  try {
+    const subCategory = await SubCategory.findById(req.params.subCategoryId);
+    if (!subCategory) {
+      return res.status(404).json({ message: "Sub-category not found" });
+    }
+    subCategory.reviews.push({ user: userId, rating, comment });
+    await subCategory.save();
+    res.json({ message: "Review added", reviews: subCategory.reviews });
+  } catch (err) {
+    res.status(500).json({ message: "Error adding review", error: err.message });
+  }
+});
 const multer = require('multer');
 const cloudinary = require('cloudinary').v2;
 const Category = require('../models/Category');
