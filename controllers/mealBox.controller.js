@@ -47,8 +47,8 @@ exports.createMealBox = async (req, res) => {
 // Get all meal boxes
 exports.getMealBoxes = async (req, res) => {
   try {
-    const boxes = await MealBox.find()
-      .populate('category')
+      const boxes = await MealBox.find()
+        .populate('categories')
       .populate({
         path: 'subCategories',
         select: 'name imageUrl category',
