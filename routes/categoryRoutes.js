@@ -1,7 +1,12 @@
 const express = require('express');
 const router = express.Router();
-// ...existing code...
-// ...existing code...
+const multer = require('multer');
+const cloudinary = require('cloudinary').v2;
+const Category = require('../models/Category');
+const SubCategory = require('../models/SubCategory');
+const auth = require('../middlewares/auth');
+const MealBox = require('../models/MealBox');
+
 // Get single subcategory by ID (including reviews)
 router.get('/subcategory/:id', async (req, res) => {
   try {
@@ -14,8 +19,9 @@ router.get('/subcategory/:id', async (req, res) => {
     res.status(500).json({ message: 'Error fetching sub-category', error: err.message });
   }
 });
+
 // Add review to subcategory
-router.post('/add-review/:subCategoryId', async (req, res) => {
+router.post('/add-review/:subCategoryId', auth, async (req, res) => {
   const { rating, comment } = req.body;
   const userId = req.user && req.user.id ? req.user.id : null;
   if (!userId) {
@@ -36,11 +42,6 @@ router.post('/add-review/:subCategoryId', async (req, res) => {
     res.status(500).json({ message: "Error adding review", error: err.message });
   }
 });
-const multer = require('multer');
-const cloudinary = require('cloudinary').v2;
-const Category = require('../models/Category');
-const SubCategory = require('../models/SubCategory');
-const auth = require('../middlewares/auth');
 
 // Vendor can update subcategory availability
 router.put('/update-subcategory-availability/:id', auth, async (req, res) => {
@@ -301,7 +302,6 @@ router.post('/create-or-add', async (req, res) => {
 // 5. Get all categories with their sub-categories
 // Method: GET
 // URL: http://localhost:5000/api/categories/all-with-subcategories
-const MealBox = require('../models/MealBox');
 // Categories with their sub-categories and meal boxes
 router.get('/all-with-subcategories', async (req, res) => {
   try {
