@@ -285,7 +285,7 @@ router.get('/all-with-subcategories', async (req, res) => {
 
 // Add a sub-category under a main category (e.g., Snacks -> Mexican)
 router.post('/add-subcategory', auth, upload.single('image'), async (req, res) => {
-  const { name, description, pricePerUnit, quantity, categoryId } = req.body;
+  const { name, description, pricePerUnit, quantity, categoryId, discount, discountStart, discountEnd } = req.body;
   const vendorId = req.user && req.user.id ? req.user.id : null;
   if (!vendorId) {
     return res.status(401).json({ message: "Vendor authentication required" });
@@ -308,7 +308,10 @@ router.post('/add-subcategory', auth, upload.single('image'), async (req, res) =
             quantity,
             imageUrl,
             category: categoryId,
-            vendor: vendorId
+            vendor: vendorId,
+            discount,
+            discountStart,
+            discountEnd
           });
           await subCategory.save();
           res.status(201).json({ message: "Sub-category added", subCategory });
@@ -326,7 +329,10 @@ router.post('/add-subcategory', auth, upload.single('image'), async (req, res) =
         quantity,
         imageUrl,
         category: categoryId,
-        vendor: vendorId
+        vendor: vendorId,
+        discount,
+        discountStart,
+        discountEnd
       });
       await subCategory.save();
       res.status(201).json({ message: "Sub-category added", subCategory });
