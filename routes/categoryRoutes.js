@@ -377,7 +377,7 @@ router.delete('/delete/:id', async (req, res) => {
 // Method: PUT
 // URL: /api/categories/update-subcategory/:id
 router.put('/update-subcategory/:id', async (req, res) => {
-  const { name, description, pricePerUnit, imageUrl, category, vendor } = req.body;
+  const { name, description, pricePerUnit, imageUrl, category, vendor, discount, discountStart, discountEnd } = req.body;
   try {
     const updateFields = {};
     if (name !== undefined) updateFields.name = name;
@@ -386,6 +386,9 @@ router.put('/update-subcategory/:id', async (req, res) => {
     if (imageUrl !== undefined) updateFields.imageUrl = imageUrl;
     if (category !== undefined) updateFields.category = category;
     if (vendor !== undefined) updateFields.vendor = vendor;
+    if (discount !== undefined) updateFields.discount = discount;
+    if (discountStart !== undefined) updateFields.discountStart = discountStart;
+    if (discountEnd !== undefined) updateFields.discountEnd = discountEnd;
     const updatedSubCategory = await SubCategory.findByIdAndUpdate(
       req.params.id,
       updateFields,

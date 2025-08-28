@@ -22,12 +22,19 @@ router.post('/create', async (req, res) => {
     return res.status(400).json({ message: "Missing required fields" });
   }
 
-  // Validate each item for subCategory and mealBox existence
+  // Validate each item for subCategory and mealBox existence, and apply discount
   for (const item of items) {
     if (item.subCategory) {
       const subCategoryExists = await SubCategory.findById(item.subCategory);
       if (!subCategoryExists) {
         return res.status(400).json({ message: `SubCategory ID ${item.subCategory} not found` });
+      }
+      // Apply discount if present
+      if (subCategoryExists.discount && subCategoryExists.pricePerUnit) {
+        const discountAmount = (subCategoryExists.pricePerUnit * subCategoryExists.discount) / 100;
+        item.discountedPrice = subCategoryExists.pricePerUnit - discountAmount;
+      } else {
+        item.discountedPrice = subCategoryExists.pricePerUnit;
       }
     }
     if (item.mealBox) {
