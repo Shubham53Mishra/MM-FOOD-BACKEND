@@ -1,3 +1,15 @@
+// Delete meal box by ID
+exports.deleteMealBox = async (req, res) => {
+  try {
+    const deleted = await MealBox.findByIdAndDelete(req.params.id);
+    if (!deleted) {
+      return res.status(404).json({ message: 'MealBox not found' });
+    }
+    res.json({ message: 'MealBox deleted successfully' });
+  } catch (err) {
+    res.status(500).json({ message: 'Error deleting meal box', error: err.message });
+  }
+};
 const MealBox = require('../models/MealBox');
 const fs = require('fs');
 const { uploadImage } = require('../services/cloudinaryService');
@@ -5,7 +17,7 @@ const { uploadImage } = require('../services/cloudinaryService');
 // Create meal box
 exports.createMealBox = async (req, res) => {
   try {
-  let { title, description, minQty, price, deliveryDate, sampleAvailable, items, packagingDetails, category, subCategories, email } = req.body;
+  let { title, description, minQty, price, deliveryDate, sampleAvailable, items, packagingDetails, categories, subCategories, email } = req.body;
     sampleAvailable = sampleAvailable === 'true' || sampleAvailable === true;
     if (typeof items === 'string') {
       try {
@@ -34,26 +46,27 @@ exports.createMealBox = async (req, res) => {
       packagingDetails,
       boxImage,
       actualImage,
-      category,
+      categories,
       subCategories,
-      email
+      email,
+      vendor: req.user.id
     });
     res.status(201).json(mealBox);
   } catch (err) {
     res.status(500).json({ message: 'Error creating meal box', error: err.message });
   }
-};
+}; 
 
 // Get all meal boxes
 exports.getMealBoxes = async (req, res) => {
   try {
-      const boxes = await MealBox.find()
+      const boxes = await MealBox.find({ vendor: req.user.id })
         .populate('categories')
-      .populate({
-        path: 'subCategories',
-        select: 'name imageUrl category',
-        populate: { path: 'category', select: 'name' }
-      });
+        .populate({
+          path: 'subCategories',
+          select: 'name imageUrl category',
+          populate: { path: 'category', select: 'name' }
+        });
     res.json(boxes);
   } catch (err) {
     res.status(500).json({ message: 'Error fetching meal boxes', error: err.message });

@@ -13,7 +13,8 @@ const mealBoxSchema = new mongoose.Schema({
   packagingDetails: String,
   categories: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Category' }],
   subCategories: [{ type: mongoose.Schema.Types.ObjectId, ref: 'SubCategory' }],
-  email: { type: String }
+  email: { type: String },
+  vendor: { type: mongoose.Schema.Types.ObjectId, ref: 'Vendor' }
 });
 
 module.exports = mongoose.model('MealBox', mealBoxSchema);
