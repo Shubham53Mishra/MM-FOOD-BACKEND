@@ -37,6 +37,9 @@ exports.createMealBox = async (req, res) => {
 				}));
 				mealBox.subCategories = mealBox.subCategories.filter(Boolean);
 			}
+			// Ensure boxImage and actualImage are strings or set to empty string
+			mealBox.boxImage = typeof mealBox.boxImage === 'string' ? mealBox.boxImage : '';
+			mealBox.actualImage = typeof mealBox.actualImage === 'string' ? mealBox.actualImage : '';
 			// Save mealBox as a separate document
 			mealBox.vendor = vendorId;
 			const savedMealBox = await new MealBox(mealBox).save();
