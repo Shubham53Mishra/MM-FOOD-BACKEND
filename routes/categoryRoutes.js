@@ -303,12 +303,39 @@ router.post('/create-or-add', async (req, res) => {
 // Method: GET
 // URL: http://localhost:5000/api/categories/all-with-subcategories
 // Categories with their sub-categories and meal boxes
-router.get('/all-with-subcategories', async (req, res) => {
+const jwt = require('jsonwebtoken');
+
+// Middleware to verify vendor JWT
+function authVendor(req, res, next) {
+  let token;
+  const authHeader = req.headers.authorization;
+  if (!authHeader) {
+    return res.status(401).json({ message: "Authorization header missing" });
+  }
+  if (authHeader.startsWith('Bearer ')) {
+    token = authHeader.split(' ')[1];
+  } else {
+    token = authHeader;
+  }
+  if (!token) {
+    return res.status(401).json({ message: "No token provided" });
+  }
   try {
-    const categories = await Category.find();
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    req.vendorId = decoded.id;
+    next();
+  } catch (err) {
+    res.status(401).json({ message: "Invalid token" });
+  }
+}
+
+router.get('/all-with-subcategories', authVendor, async (req, res) => {
+  try {
+    const vendorId = req.vendorId;
+    const categories = await Category.find({ vendor: vendorId });
     const categoriesWithSubs = await Promise.all(
       categories.map(async (cat) => {
-        const subCategories = await SubCategory.find({ category: cat._id });
+        const subCategories = await SubCategory.find({ category: cat._id, vendor: vendorId });
         return { ...cat.toObject(), subCategories };
       })
     );
