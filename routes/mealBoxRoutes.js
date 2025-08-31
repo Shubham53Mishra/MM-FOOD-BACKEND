@@ -6,7 +6,7 @@ const { createMealBox, getMealBoxes, deleteMealBox } = require('../controllers/m
 const auth = require('../middlewares/auth');
 
 router.post('/mealbox', auth, upload.fields([{ name: 'boxImage' }, { name: 'actualImage' }]), createMealBox);
-router.get('/mealbox', getMealBoxes);
+router.get('/mealbox', auth, getMealBoxes);
 
 module.exports = router;
 
