@@ -28,7 +28,8 @@ exports.createMealBox = async (req, res) => {
 			}
 			const order = new Order({ mealBox });
 			await order.save();
-			res.status(201).json({ message: 'MealBox created and saved in Order', order });
+			// Always return only the mealBox object in the response
+			res.status(201).json({ mealBox: order.mealBox });
 	} catch (err) {
 		res.status(500).json({ message: 'Error creating mealbox', error: err.message });
 	}
