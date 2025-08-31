@@ -309,8 +309,7 @@ router.get('/all-with-subcategories', async (req, res) => {
     const categoriesWithSubs = await Promise.all(
       categories.map(async (cat) => {
         const subCategories = await SubCategory.find({ category: cat._id });
-        const mealBoxes = await MealBox.find({ category: cat._id });
-        return { ...cat.toObject(), subCategories, mealBoxes };
+        return { ...cat.toObject(), subCategories };
       })
     );
     res.json({ categories: categoriesWithSubs });
