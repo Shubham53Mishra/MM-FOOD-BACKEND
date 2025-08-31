@@ -1,4 +1,4 @@
-const Order = require('../models/Order');
+const MealBox = require('../models/MealBox');
 const Category = require('../models/Category');
 const SubCategory = require('../models/SubCategory');
 
@@ -12,24 +12,24 @@ exports.createMealBox = async (req, res) => {
 			mealBox.subCategories = Array.isArray(mealBox.subCategories) ? mealBox.subCategories : [];
 			// Populate categories with name and image, filter by vendor
 			if (mealBox.categories.length > 0) {
-				mealBox.categories = await Promise.all(mealBox.categories.map(async (cat) => {
-					const dbCat = await Category.findOne({ _id: cat._id || cat, vendor: vendorId });
+				mealBox.categories = await Promise.all(mealBox.categories.map(async (catId) => {
+					const dbCat = await Category.findOne({ _id: catId, vendor: vendorId });
 					return dbCat ? { _id: dbCat._id, name: dbCat.name, image: dbCat.imageUrl || dbCat.image } : null;
 				}));
 				mealBox.categories = mealBox.categories.filter(Boolean);
 			}
 			// Populate subCategories with name and image, filter by vendor
 			if (mealBox.subCategories.length > 0) {
-				mealBox.subCategories = await Promise.all(mealBox.subCategories.map(async (sub) => {
-					const dbSub = await SubCategory.findOne({ _id: sub._id || sub, vendor: vendorId });
+				mealBox.subCategories = await Promise.all(mealBox.subCategories.map(async (subId) => {
+					const dbSub = await SubCategory.findOne({ _id: subId, vendor: vendorId });
 					return dbSub ? { _id: dbSub._id, name: dbSub.name, image: dbSub.imageUrl } : null;
 				}));
 				mealBox.subCategories = mealBox.subCategories.filter(Boolean);
 			}
-			const order = new Order({ mealBox });
-			await order.save();
-			// Always return only the mealBox object in the response
-			res.status(201).json({ mealBox: order.mealBox });
+			// Save mealBox as a separate document
+			mealBox.vendor = vendorId;
+			const savedMealBox = await new MealBox(mealBox).save();
+			res.status(201).json({ mealBox: savedMealBox });
 	} catch (err) {
 		res.status(500).json({ message: 'Error creating mealbox', error: err.message });
 	}
