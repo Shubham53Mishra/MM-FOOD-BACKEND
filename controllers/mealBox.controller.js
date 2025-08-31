@@ -26,9 +26,9 @@ exports.createMealBox = async (req, res) => {
 				}));
 				mealBox.subCategories = mealBox.subCategories.filter(Boolean);
 			}
-		const order = new Order({ mealBox });
-		await order.save();
-		res.status(201).json({ message: 'MealBox created and saved in Order', order });
+			const order = new Order({ mealBox });
+			await order.save();
+			res.status(201).json({ message: 'MealBox created and saved in Order', order });
 	} catch (err) {
 		res.status(500).json({ message: 'Error creating mealbox', error: err.message });
 	}

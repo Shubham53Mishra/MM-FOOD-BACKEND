@@ -2,8 +2,6 @@ const mongoose = require('mongoose');
 
 const orderSchema = new mongoose.Schema({
   orderId: { type: String, unique: true },
-  customerName: { type: String, required: true },
-  customerEmail: { type: String, required: true },
   customerMobile: { type: String },
   items: [{ 
     category: { type: mongoose.Schema.Types.ObjectId, ref: 'Category' },
@@ -32,7 +30,7 @@ const orderSchema = new mongoose.Schema({
       image: String
     }]
   },
-  vendor: { type: mongoose.Schema.Types.ObjectId, ref: 'Vendor', required: true },
+  vendor: { type: mongoose.Schema.Types.ObjectId, ref: 'Vendor' },
   status: { type: String, default: 'pending' },
   cancelReason: { type: String },
   deliveryAddress: { type: String }
