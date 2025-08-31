@@ -26,12 +26,18 @@ exports.createMealBox = async (req, res) => {
       return res.status(400).json({ message: 'categories must be a valid JSON array.' });
     }
   }
+  if (!Array.isArray(categories)) {
+    categories = [];
+  }
   if (typeof subCategories === 'string') {
     try {
       subCategories = JSON.parse(subCategories);
     } catch (e) {
       return res.status(400).json({ message: 'subCategories must be a valid JSON array.' });
     }
+  }
+  if (!Array.isArray(subCategories)) {
+    subCategories = [];
   }
     sampleAvailable = sampleAvailable === 'true' || sampleAvailable === true;
     if (typeof items === 'string') {
