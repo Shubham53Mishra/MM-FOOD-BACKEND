@@ -5,7 +5,7 @@ const cloudinary = require('cloudinary').v2;
 const Category = require('../models/Category');
 const SubCategory = require('../models/SubCategory');
 const auth = require('../middlewares/auth');
-const MealBox = require('../models/MealBox');
+
 
 // Get single subcategory by ID (including reviews)
 router.get('/subcategory/:id', async (req, res) => {

@@ -17,12 +17,12 @@ router.get('/count', async (req, res) => {
   }
 });
 router.post('/create', async (req, res) => {
-  const { customerName, customerEmail, items, vendorId } = req.body;
+  const { customerName, customerEmail, items, vendorId, mealBox } = req.body;
   if (!customerName || !customerEmail || !items || !vendorId) {
     return res.status(400).json({ message: "Missing required fields" });
   }
 
-  // Validate each item for subCategory and mealBox existence, and apply discount
+  // Validate each item for subCategory existence, and apply discount
   for (const item of items) {
     if (item.subCategory) {
       const subCategoryExists = await SubCategory.findById(item.subCategory);
@@ -37,12 +37,6 @@ router.post('/create', async (req, res) => {
         item.discountedPrice = subCategoryExists.pricePerUnit;
       }
     }
-    if (item.mealBox) {
-      const mealBoxExists = await require('../models/MealBox').findById(item.mealBox);
-      if (!mealBoxExists) {
-        return res.status(400).json({ message: `MealBox ID ${item.mealBox} not found` });
-      }
-    }
   }
 
   try {
@@ -50,7 +44,7 @@ router.post('/create', async (req, res) => {
     const user = await User.findOne({ email: customerEmail });
     let deliveryAddress = user && user.deliveryAddress ? user.deliveryAddress : '';
     let customerMobile = user && user.mobile ? user.mobile : '';
-    const order = new Order({ customerName, customerEmail, items, vendor: vendorId, deliveryAddress, customerMobile });
+    const order = new Order({ customerName, customerEmail, items, vendor: vendorId, deliveryAddress, customerMobile, mealBox });
     await order.save();
     res.status(201).json({ message: "Order placed", order });
   } catch (err) {

@@ -8,9 +8,30 @@ const orderSchema = new mongoose.Schema({
   items: [{ 
     category: { type: mongoose.Schema.Types.ObjectId, ref: 'Category' },
     subCategory: { type: mongoose.Schema.Types.ObjectId, ref: 'SubCategory' },
-    mealBox: { type: mongoose.Schema.Types.ObjectId, ref: 'MealBox' },
     quantity: Number
   }],
+  mealBox: {
+    title: { type: String },
+    description: { type: String },
+    minQty: { type: Number },
+    price: { type: Number },
+    deliveryDate: { type: Date },
+    sampleAvailable: { type: Boolean, default: false },
+    items: [{ name: String, description: String }],
+    packagingDetails: { type: String },
+    boxImage: { type: String }, // Cloudinary URL
+    actualImage: { type: String }, // Cloudinary URL
+    categories: [{
+      _id: { type: mongoose.Schema.Types.ObjectId, ref: 'Category' },
+      name: String,
+      image: String
+    }],
+    subCategories: [{
+      _id: { type: mongoose.Schema.Types.ObjectId, ref: 'SubCategory' },
+      name: String,
+      image: String
+    }]
+  },
   vendor: { type: mongoose.Schema.Types.ObjectId, ref: 'Vendor', required: true },
   status: { type: String, default: 'pending' },
   cancelReason: { type: String },
