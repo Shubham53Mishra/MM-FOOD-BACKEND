@@ -6,7 +6,7 @@ const SubCategory = require('../models/SubCategory');
 exports.createMealBox = async (req, res) => {
 	try {
 		let mealBox = req.body;
-		const vendorId = req.body.vendorId || req.user?.id;
+		const vendorId = req.vendorId || req.user?.id;
 		// Populate categories with name and image, filter by vendor
 		if (Array.isArray(mealBox.categories)) {
 			mealBox.categories = await Promise.all(mealBox.categories.map(async (cat) => {
