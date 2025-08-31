@@ -5,8 +5,13 @@ const SubCategory = require('../models/SubCategory');
 // Create a mealbox (fetches category/subcategory name and image by ID, filters by vendor)
 exports.createMealBox = async (req, res) => {
 	try {
-			// Accept categories/subCategories either inside or outside mealBox
-			let mealBox = typeof req.body.mealBox === 'object' && req.body.mealBox !== null ? req.body.mealBox : {};
+			// Accept mealBox data at root or inside mealBox
+			let mealBox = {};
+			if (typeof req.body.mealBox === 'object' && req.body.mealBox !== null) {
+				mealBox = req.body.mealBox;
+			} else if (typeof req.body === 'object' && req.body !== null && Object.keys(req.body).length > 0) {
+				mealBox = req.body;
+			}
 			const vendorId = req.vendorId || req.user?.id;
 			// If categories/subCategories are outside mealBox, merge them in
 			if (Array.isArray(req.body.categories)) mealBox.categories = req.body.categories;
