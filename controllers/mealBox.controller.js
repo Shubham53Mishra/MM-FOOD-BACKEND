@@ -18,6 +18,21 @@ const { uploadImage } = require('../services/cloudinaryService');
 exports.createMealBox = async (req, res) => {
   try {
   let { title, description, minQty, price, deliveryDate, sampleAvailable, items, packagingDetails, categories, subCategories, email } = req.body;
+  // Parse categories and subCategories if sent as JSON strings (form-data)
+  if (typeof categories === 'string') {
+    try {
+      categories = JSON.parse(categories);
+    } catch (e) {
+      return res.status(400).json({ message: 'categories must be a valid JSON array.' });
+    }
+  }
+  if (typeof subCategories === 'string') {
+    try {
+      subCategories = JSON.parse(subCategories);
+    } catch (e) {
+      return res.status(400).json({ message: 'subCategories must be a valid JSON array.' });
+    }
+  }
     sampleAvailable = sampleAvailable === 'true' || sampleAvailable === true;
     if (typeof items === 'string') {
       try {
