@@ -76,11 +76,14 @@ exports.createMealBox = async (req, res) => {
 exports.getMealBoxes = async (req, res) => {
   try {
       const boxes = await MealBox.find({ vendor: req.user.id })
-        .populate('categories')
+        .populate({
+          path: 'categories',
+          select: 'name image'
+        })
         .populate({
           path: 'subCategories',
           select: 'name imageUrl category',
-          populate: { path: 'category', select: 'name' }
+          populate: { path: 'category', select: 'name image' }
         });
     res.json(boxes);
   } catch (err) {
