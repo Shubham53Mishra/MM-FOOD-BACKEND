@@ -336,7 +336,8 @@ router.get('/all-with-subcategories', authVendor, async (req, res) => {
     const categoriesWithSubs = await Promise.all(
       categories.map(async (cat) => {
         const subCategories = await SubCategory.find({ category: cat._id, vendor: vendorId });
-        return { ...cat.toObject(), subCategories };
+        // Add minQty to the response for each category
+        return { ...cat.toObject(), minQty: cat.minQty, subCategories };
       })
     );
     res.json({ categories: categoriesWithSubs });
