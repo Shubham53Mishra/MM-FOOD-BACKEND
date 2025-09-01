@@ -12,6 +12,7 @@ const subCategorySchema = new mongoose.Schema({
   name: { type: String, required: true },
   description: String,
   pricePerUnit: { type: Number },
+  minQty: { type: Number, default: 1 }, // Minimum quantity for this subcategory
   discount: { type: Number, default: 0 }, // percent discount, e.g. 20 for 20%
   discountStart: { type: Date }, // discount start time
   discountEnd: { type: Date },   // discount end time

@@ -206,7 +206,7 @@ router.get('/all', auth, async (req, res) => {
 //   quantity: 100
 //   image: (file, optional)
 router.post('/add', auth, async (req, res) => {
-  const { name } = req.body;
+  const { name, minQty } = req.body;
   if (!name) {
     return res.status(400).json({ message: "Name is required" });
   }
@@ -215,9 +215,9 @@ router.post('/add', auth, async (req, res) => {
     return res.status(401).json({ message: "Vendor authentication required" });
   }
   try {
-    const newCategory = new Category({ name, vendor: vendorId });
+    const newCategory = new Category({ name, vendor: vendorId, minQty: minQty !== undefined ? minQty : 1 });
     await newCategory.save();
-    res.status(201).json({ message: "Category added", category: { name: newCategory.name } });
+  res.status(201).json({ message: "Category added", category: newCategory });
   } catch (err) {
     res.status(500).json({ message: "Error saving category", error: err.message });
   }
@@ -348,7 +348,7 @@ router.get('/all-with-subcategories', authVendor, async (req, res) => {
 
 // Add a sub-category under a main category (e.g., Snacks -> Mexican)
 router.post('/add-subcategory', auth, upload.single('image'), async (req, res) => {
-  const { name, description, pricePerUnit, quantity, categoryId, discount, discountStart, discountEnd } = req.body;
+  const { name, description, pricePerUnit, quantity, categoryId, discount, discountStart, discountEnd, minQty } = req.body;
   const vendorId = req.user && req.user.id ? req.user.id : null;
   if (!vendorId) {
     return res.status(401).json({ message: "Vendor authentication required" });
@@ -369,6 +369,7 @@ router.post('/add-subcategory', auth, upload.single('image'), async (req, res) =
             description,
             pricePerUnit,
             quantity,
+            minQty: minQty !== undefined ? minQty : 1,
             imageUrl,
             category: categoryId,
             vendor: vendorId,
