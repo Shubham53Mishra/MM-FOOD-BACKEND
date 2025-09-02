@@ -8,7 +8,7 @@ const mealBoxSchema = new mongoose.Schema({
 	deliveryDate: Date,
 	sampleAvailable: { type: Boolean, default: false },
 	items: [{ name: String, description: String }],
-	customItems: [{ name: String, description: String, image: String }],
+	// customItems removed; will be added dynamically via add-items API
 	packagingDetails: String,
 	boxImage: String,      // Cloudinary URL
 	actualImage: String,   // Cloudinary URL
