@@ -21,6 +21,8 @@ router.post('/:mealBoxId/add-item', addCustomItemToMealBox);
 
 // POST /api/mealbox
 router.post('/', createMealBox);
+// POST /api/mealbox (form-data supported)
+router.post('/', createMealBox);
 
 // GET /api/mealbox - get all mealBox documents from MealBox collection
 router.get('/', async (req, res) => {

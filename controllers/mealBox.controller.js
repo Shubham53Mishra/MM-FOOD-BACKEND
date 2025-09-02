@@ -49,26 +49,35 @@ const Category = require('../models/Category');
 const SubCategory = require('../models/SubCategory');
 
 // Create a mealbox (no categories/subcategories, but all other info)
-exports.createMealBox = async (req, res) => {
-	try {
-		let mealBox = {};
-		if (typeof req.body.mealBox === 'object' && req.body.mealBox !== null) {
-			mealBox = req.body.mealBox;
-		} else if (typeof req.body === 'object' && req.body !== null && Object.keys(req.body).length > 0) {
-			mealBox = req.body;
+const multer = require('multer');
+const upload = multer({ storage: multer.memoryStorage() });
+
+exports.createMealBox = [
+	upload.fields([
+		{ name: 'boxImage', maxCount: 1 },
+		{ name: 'actualImage', maxCount: 1 }
+	]),
+	async (req, res) => {
+		try {
+			// Support form-data: req.body for text, req.files for images
+			const mealBox = {
+				title: req.body.title,
+				description: req.body.description,
+				minQty: req.body.minQty,
+				price: req.body.price,
+				deliveryDate: req.body.deliveryDate,
+				sampleAvailable: req.body.sampleAvailable,
+				packagingDetails: req.body.packagingDetails,
+				items: Array.isArray(req.body.items) ? req.body.items : [],
+				vendor: req.vendorId || (req.user && req.user.id)
+			};
+			// Handle images from form-data
+			mealBox.boxImage = req.files && req.files.boxImage ? req.files.boxImage[0].originalname : '';
+			mealBox.actualImage = req.files && req.files.actualImage ? req.files.actualImage[0].originalname : '';
+			const savedMealBox = await new MealBox(mealBox).save();
+			res.status(201).json({ mealBox: savedMealBox });
+		} catch (err) {
+			res.status(500).json({ message: 'Error creating mealbox', error: err.message });
 		}
-	// Accept items as array of Item IDs
-	mealBox.items = Array.isArray(mealBox.items) ? mealBox.items : [];
-		const vendorId = req.vendorId || req.user?.id;
-		// Remove categories/subCategories if present
-		delete mealBox.categories;
-		delete mealBox.subCategories;
-		mealBox.boxImage = typeof mealBox.boxImage === 'string' ? mealBox.boxImage : '';
-		mealBox.actualImage = typeof mealBox.actualImage === 'string' ? mealBox.actualImage : '';
-		mealBox.vendor = vendorId;
-		const savedMealBox = await new MealBox(mealBox).save();
-		res.status(201).json({ mealBox: savedMealBox });
-	} catch (err) {
-		res.status(500).json({ message: 'Error creating mealbox', error: err.message });
 	}
-};
+];
