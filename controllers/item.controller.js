@@ -8,21 +8,21 @@ exports.createItem = [
 	upload.single('image'),
 	async (req, res) => {
 		try {
-					const { name, description, category } = req.body;
-					let imageUrl = req.body.imageUrl;
-					// If image file is uploaded, you can add cloudinary upload logic here
-					if (req.file) {
-						// For now, just save the filename or buffer info
-						imageUrl = req.file.originalname;
-					}
-					if (!name) {
-						return res.status(400).json({ message: 'Name is required' });
-					}
-					// Get vendor ID from authenticated user (req.vendorId or req.user.id)
-					const vendor = req.vendorId || (req.user && req.user.id);
-					const item = new Item({ name, description, imageUrl, category, vendor });
-					await item.save();
-					res.status(201).json({ item });
+							// Support form-data: req.body for text, req.file for image
+							const name = req.body.name;
+							const description = req.body.description;
+							const category = req.body.category;
+							let imageUrl = req.body.imageUrl;
+							if (req.file) {
+								imageUrl = req.file.originalname;
+							}
+							if (!name) {
+								return res.status(400).json({ message: 'Name is required' });
+							}
+							const vendor = req.vendorId || (req.user && req.user.id);
+							const item = new Item({ name, description, imageUrl, category, vendor });
+							await item.save();
+							res.status(201).json({ item });
 		} catch (err) {
 			res.status(500).json({ message: 'Error creating item', error: err.message });
 		}
