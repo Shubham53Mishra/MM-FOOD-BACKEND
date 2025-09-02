@@ -1,13 +1,11 @@
 const express = require('express');
 const router = express.Router();
 
-const upload = require('../middlewares/upload');
-const { uploadCustomItemImage } = require('../controllers/upload.controller');
+// ...existing code...
 const { createMealBox, addMultipleCustomItemsToMealBox, addCustomItemToMealBox } = require('../controllers/mealBox.controller');
 const MealBox = require('../models/MealBox');
 
-// POST /api/mealbox/upload-item-image - upload image for custom item
-router.post('/upload-item-image', upload.single('image'), uploadCustomItemImage);
+// ...existing code...
 
 // POST /api/mealbox/:mealBoxId/add-items - add multiple custom items to a mealbox
 router.post('/:mealBoxId/add-items', addMultipleCustomItemsToMealBox);
