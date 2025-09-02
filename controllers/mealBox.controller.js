@@ -1,49 +1,71 @@
+// Add multiple custom items to an existing MealBox
+exports.addMultipleCustomItemsToMealBox = async (req, res) => {
+	try {
+		const { mealBoxId } = req.params;
+		const { items } = req.body; // items should be an array of { name, description }
+		if (!Array.isArray(items) || items.length === 0) {
+			return res.status(400).json({ message: 'Items array is required' });
+		}
+		const mealBox = await MealBox.findById(mealBoxId);
+		if (!mealBox) {
+			return res.status(404).json({ message: 'MealBox not found' });
+		}
+			items.forEach(item => {
+				if (item.name) {
+					mealBox.customItems.push({
+						name: item.name,
+						description: item.description,
+						image: item.image || ''
+					});
+				}
+			});
+		await mealBox.save();
+		res.json({ mealBox });
+	} catch (err) {
+		res.status(500).json({ message: 'Error adding items', error: err.message });
+	}
+};
+// Add a custom item to an existing MealBox
+exports.addCustomItemToMealBox = async (req, res) => {
+	try {
+		const { mealBoxId } = req.params;
+		const { name, description } = req.body;
+		if (!name) {
+			return res.status(400).json({ message: 'Item name is required' });
+		}
+		const mealBox = await MealBox.findById(mealBoxId);
+		if (!mealBox) {
+			return res.status(404).json({ message: 'MealBox not found' });
+		}
+		mealBox.customItems.push({ name, description });
+		await mealBox.save();
+		res.json({ mealBox });
+	} catch (err) {
+		res.status(500).json({ message: 'Error adding item', error: err.message });
+	}
+};
 const MealBox = require('../models/MealBox');
 const Category = require('../models/Category');
 const SubCategory = require('../models/SubCategory');
 
-// Create a mealbox (fetches category/subcategory name and image by ID, filters by vendor)
+// Create a mealbox (no categories/subcategories, but all other info)
 exports.createMealBox = async (req, res) => {
 	try {
-			// Accept mealBox data at root or inside mealBox
-			let mealBox = {};
-			if (typeof req.body.mealBox === 'object' && req.body.mealBox !== null) {
-				mealBox = req.body.mealBox;
-			} else if (typeof req.body === 'object' && req.body !== null && Object.keys(req.body).length > 0) {
-				mealBox = req.body;
-			}
-			const vendorId = req.vendorId || req.user?.id;
-			// If categories/subCategories are outside mealBox, merge them in
-			if (Array.isArray(req.body.categories)) mealBox.categories = req.body.categories;
-			if (Array.isArray(req.body.subCategories)) mealBox.subCategories = req.body.subCategories;
-			// Ensure categories and subCategories are arrays
-			mealBox.categories = Array.isArray(mealBox.categories) ? mealBox.categories : [];
-			mealBox.subCategories = Array.isArray(mealBox.subCategories) ? mealBox.subCategories : [];
-			// Populate categories with name and image, try vendor filter, fallback to any
-			if (mealBox.categories.length > 0) {
-				mealBox.categories = await Promise.all(mealBox.categories.map(async (catId) => {
-					let dbCat = await Category.findOne({ _id: catId, vendor: vendorId });
-					if (!dbCat) dbCat = await Category.findOne({ _id: catId });
-					return dbCat ? { _id: dbCat._id, name: dbCat.name, image: dbCat.imageUrl || dbCat.image } : null;
-				}));
-				mealBox.categories = mealBox.categories.filter(Boolean);
-			}
-			// Populate subCategories with name and image, try vendor filter, fallback to any
-			if (mealBox.subCategories.length > 0) {
-				mealBox.subCategories = await Promise.all(mealBox.subCategories.map(async (subId) => {
-					let dbSub = await SubCategory.findOne({ _id: subId, vendor: vendorId });
-					if (!dbSub) dbSub = await SubCategory.findOne({ _id: subId });
-					return dbSub ? { _id: dbSub._id, name: dbSub.name, image: dbSub.imageUrl } : null;
-				}));
-				mealBox.subCategories = mealBox.subCategories.filter(Boolean);
-			}
-			// Ensure boxImage and actualImage are strings or set to empty string
-			mealBox.boxImage = typeof mealBox.boxImage === 'string' ? mealBox.boxImage : '';
-			mealBox.actualImage = typeof mealBox.actualImage === 'string' ? mealBox.actualImage : '';
-			// Save mealBox as a separate document
-			mealBox.vendor = vendorId;
-			const savedMealBox = await new MealBox(mealBox).save();
-			res.status(201).json({ mealBox: savedMealBox });
+		let mealBox = {};
+		if (typeof req.body.mealBox === 'object' && req.body.mealBox !== null) {
+			mealBox = req.body.mealBox;
+		} else if (typeof req.body === 'object' && req.body !== null && Object.keys(req.body).length > 0) {
+			mealBox = req.body;
+		}
+		const vendorId = req.vendorId || req.user?.id;
+		// Remove categories/subCategories if present
+		delete mealBox.categories;
+		delete mealBox.subCategories;
+		mealBox.boxImage = typeof mealBox.boxImage === 'string' ? mealBox.boxImage : '';
+		mealBox.actualImage = typeof mealBox.actualImage === 'string' ? mealBox.actualImage : '';
+		mealBox.vendor = vendorId;
+		const savedMealBox = await new MealBox(mealBox).save();
+		res.status(201).json({ mealBox: savedMealBox });
 	} catch (err) {
 		res.status(500).json({ message: 'Error creating mealbox', error: err.message });
 	}

@@ -8,19 +8,10 @@ const mealBoxSchema = new mongoose.Schema({
 	deliveryDate: Date,
 	sampleAvailable: { type: Boolean, default: false },
 	items: [{ name: String, description: String }],
+	customItems: [{ name: String, description: String, image: String }],
 	packagingDetails: String,
 	boxImage: String,      // Cloudinary URL
 	actualImage: String,   // Cloudinary URL
-	categories: [{
-		_id: { type: mongoose.Schema.Types.ObjectId, ref: 'Category' },
-		name: String,
-		image: String
-	}],
-	subCategories: [{
-		_id: { type: mongoose.Schema.Types.ObjectId, ref: 'SubCategory' },
-		name: String,
-		image: String
-	}],
 	vendor: { type: mongoose.Schema.Types.ObjectId, ref: 'Vendor' }
 }, { timestamps: true });
 
