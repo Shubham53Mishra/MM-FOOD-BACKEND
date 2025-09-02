@@ -329,14 +329,13 @@ function authVendor(req, res, next) {
   }
 }
 
-router.get('/all-with-subcategories', authVendor, async (req, res) => {
+router.get('/all-with-subcategories', async (req, res) => {
   try {
-    const vendorId = req.vendorId;
-    const categories = await Category.find({ vendor: vendorId });
+    // If you want to fetch all categories and subcategories for all vendors, remove vendor filtering
+    const categories = await Category.find();
     const categoriesWithSubs = await Promise.all(
       categories.map(async (cat) => {
-        const subCategories = await SubCategory.find({ category: cat._id, vendor: vendorId });
-        // Add minQty to the response for each category
+        const subCategories = await SubCategory.find({ category: cat._id });
         return { ...cat.toObject(), minQty: cat.minQty, subCategories };
       })
     );
