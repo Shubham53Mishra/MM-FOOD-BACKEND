@@ -7,7 +7,6 @@ const mealBoxSchema = new mongoose.Schema({
 	price: Number,
 	deliveryDate: Date,
 	sampleAvailable: { type: Boolean, default: false },
-	items: [{ name: String, description: String }],
 	items: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Item' }],
 	packagingDetails: String,
 	boxImage: String,      // Cloudinary URL

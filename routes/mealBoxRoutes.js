@@ -27,17 +27,10 @@ router.post('/', createMealBox);
 // GET /api/mealbox - get all mealBox documents from MealBox collection
 router.get('/', async (req, res) => {
 	try {
-		const mealboxes = await MealBox.find().populate('vendor', 'name email mobile image');
-		// Only show customItems, not categories/subCategories
-		const sanitizedMealboxes = mealboxes.map(box => {
-			if (box.vendor && box.vendor.password) {
-				const vendor = box.vendor.toObject ? box.vendor.toObject() : { ...box.vendor };
-				delete vendor.password;
-				return { ...box.toObject(), vendor, customItems: box.customItems };
-			}
-			return { ...box.toObject(), customItems: box.customItems };
-		});
-		res.json({ mealboxes: sanitizedMealboxes });
+		const mealboxes = await MealBox.find()
+		  .populate('vendor', 'name email mobile image')
+		  .populate('items');
+		res.json({ mealboxes });
 	} catch (err) {
 		res.status(500).json({ message: 'Error fetching mealboxes', error: err.message });
 	}
