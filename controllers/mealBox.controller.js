@@ -57,10 +57,8 @@ exports.createMealBox = async (req, res) => {
 		} else if (typeof req.body === 'object' && req.body !== null && Object.keys(req.body).length > 0) {
 			mealBox = req.body;
 		}
-		// Remove customItems if present in request
-		if ('customItems' in mealBox) {
-			delete mealBox.customItems;
-		}
+	// Accept items as array of Item IDs
+	mealBox.items = Array.isArray(mealBox.items) ? mealBox.items : [];
 		const vendorId = req.vendorId || req.user?.id;
 		// Remove categories/subCategories if present
 		delete mealBox.categories;
