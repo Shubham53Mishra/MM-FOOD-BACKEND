@@ -3,7 +3,9 @@ const router = express.Router();
 
 const { createItem } = require('../controllers/item.controller');
 
-// POST /api/item - create a new item (form-data supported)
-router.post('/', createItem);
+const auth = require('../middlewares/auth');
+
+// POST /api/item - create a new item (form-data supported, requires auth)
+router.post('/', auth, createItem);
 
 module.exports = router;
