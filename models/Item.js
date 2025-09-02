@@ -4,7 +4,6 @@ const itemSchema = new mongoose.Schema({
   name: { type: String, required: true },
   description: { type: String },
   // pricePerUnit: { type: Number, required: true },
-  quantity: { type: Number, required: true },
   imageUrl: { type: String },
   category: { type: mongoose.Schema.Types.ObjectId, ref: 'Category' },
   vendor: { type: mongoose.Schema.Types.ObjectId, ref: 'Vendor' }
