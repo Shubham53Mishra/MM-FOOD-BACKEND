@@ -1,17 +1,15 @@
-
 const express = require('express');
 const router = express.Router();
+const { updateMealBox, createMealBox, addMultipleCustomItemsToMealBox, addCustomItemToMealBox } = require('../controllers/mealBox.controller');
 const upload = require('../middlewares/upload');
 const { uploadCustomItemImage } = require('../controllers/upload.controller');
+const MealBox = require('../models/MealBox');
+
+// PUT /api/mealbox/:id - update a mealbox
+router.put('/:id', updateMealBox);
 
 // POST /api/mealbox/upload-item-image - upload image for custom item
 router.post('/upload-item-image', upload.single('image'), uploadCustomItemImage);
-
-// ...existing code...
-const { createMealBox, addMultipleCustomItemsToMealBox, addCustomItemToMealBox } = require('../controllers/mealBox.controller');
-const MealBox = require('../models/MealBox');
-
-// ...existing code...
 
 // POST /api/mealbox/:mealBoxId/add-items - add multiple custom items to a mealbox
 router.post('/:mealBoxId/add-items', addMultipleCustomItemsToMealBox);
@@ -20,8 +18,6 @@ router.post('/:mealBoxId/add-items', addMultipleCustomItemsToMealBox);
 router.post('/:mealBoxId/add-item', addCustomItemToMealBox);
 
 // POST /api/mealbox
-router.post('/', createMealBox);
-// POST /api/mealbox (form-data supported)
 router.post('/', createMealBox);
 
 // GET /api/mealbox - get all mealBox documents from MealBox collection

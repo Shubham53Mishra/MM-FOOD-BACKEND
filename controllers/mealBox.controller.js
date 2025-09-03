@@ -1,3 +1,23 @@
+// Update a mealbox
+exports.updateMealBox = async (req, res) => {
+	try {
+		const { id } = req.params;
+		let update = req.body;
+		// If items is a string (from form-data), parse it as JSON
+		if (typeof update.items === 'string') {
+			try {
+				update.items = JSON.parse(update.items);
+			} catch {
+				update.items = [];
+			}
+		}
+		const mealBox = await MealBox.findByIdAndUpdate(id, update, { new: true });
+		if (!mealBox) return res.status(404).json({ message: 'MealBox not found' });
+		res.json({ mealBox });
+	} catch (err) {
+		res.status(500).json({ message: 'Error updating mealbox', error: err.message });
+	}
+};
 // Add multiple custom items to an existing MealBox
 exports.addMultipleCustomItemsToMealBox = async (req, res) => {
 	try {
