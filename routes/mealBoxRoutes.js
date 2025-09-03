@@ -25,9 +25,15 @@ router.post('/:mealBoxId/add-item', addCustomItemToMealBox);
 router.post('/', createMealBox);
 
 // GET /api/mealbox - get all mealBox documents from MealBox collection
+// GET /api/mealbox - get all mealBox documents, or only vendor's if token is present
 router.get('/', async (req, res) => {
 	try {
-		const mealboxes = await MealBox.find()
+		let query = {};
+		// If vendorId is set by auth middleware (token present), filter by vendor
+		if (req.vendorId || (req.user && req.user.id)) {
+			query.vendor = req.vendorId || req.user.id;
+		}
+		const mealboxes = await MealBox.find(query)
 		  .populate('vendor', 'name email mobile image')
 		  .populate('items');
 		res.json({ mealboxes });

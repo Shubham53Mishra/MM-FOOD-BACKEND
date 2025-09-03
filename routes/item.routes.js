@@ -12,9 +12,15 @@ router.put('/:id', auth, updateItem);
 router.delete('/:id', auth, deleteItem);
 
 // GET /api/item - get all items
+// GET /api/item - get all items, or only vendor's if token is present
 router.get('/', async (req, res) => {
 	try {
-		const items = await Item.find();
+		let query = {};
+		// If vendorId is set by auth middleware (token present), filter by vendor
+		if (req.vendorId || (req.user && req.user.id)) {
+			query.vendor = req.vendorId || req.user.id;
+		}
+		const items = await Item.find(query);
 		res.json({ items });
 	} catch (err) {
 		res.status(500).json({ message: 'Error fetching items', error: err.message });
