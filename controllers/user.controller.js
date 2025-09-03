@@ -1,3 +1,15 @@
+// Get user's favorite subcategories
+exports.getFavoriteSubCategories = async (req, res) => {
+	try {
+		const userId = req.user && req.user.id;
+		if (!userId) return res.status(401).json({ message: 'User not authenticated' });
+		const user = await User.findById(userId).populate('favoriteSubCategories');
+		if (!user) return res.status(404).json({ message: 'User not found' });
+		res.json({ favoriteSubCategories: user.favoriteSubCategories || [] });
+	} catch (err) {
+		res.status(500).json({ message: 'Error fetching favorite subcategories', error: err.message });
+	}
+};
 // Remove a subcategory from user's favorites
 exports.unfavoriteSubcategory = async (req, res) => {
 	try {

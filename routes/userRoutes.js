@@ -4,10 +4,12 @@ const auth = require('../middlewares/auth');
 const Vendor = require('../models/Vendor');
 const Category = require('../models/Category');
 const { registerUser, loginUser } = require('../controllers/auth.controller');
-const { getProfile, updateProfile, addDeliveryAddress, getDeliveryAddresses, updateAddress, saveFavoriteSubCategories, unfavoriteSubcategory } = require('../controllers/user.controller');
+const { getProfile, updateProfile, addDeliveryAddress, getDeliveryAddresses, updateAddress, saveFavoriteSubCategories, unfavoriteSubcategory, getFavoriteSubCategories } = require('../controllers/user.controller');
 const multer = require('multer');
 const storage = multer.memoryStorage();
 const upload = multer({ storage });
+// GET /api/users/favorite-subcategories - get user's favorite subcategories
+router.get('/favorite-subcategories', auth, getFavoriteSubCategories);
 // POST /api/users/unfavorite-subcategory - remove a subcategory from favorites
 router.post('/unfavorite-subcategory', auth, unfavoriteSubcategory);
 // Save favorite subcategories for user
