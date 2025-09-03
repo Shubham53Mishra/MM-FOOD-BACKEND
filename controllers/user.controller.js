@@ -11,6 +11,9 @@ exports.unfavoriteSubcategory = async (req, res) => {
 		}
 		const user = await User.findById(userId);
 		if (!user) return res.status(404).json({ message: 'User not found' });
+		if (!Array.isArray(user.favoriteSubcategories)) {
+			user.favoriteSubcategories = [];
+		}
 		user.favoriteSubcategories = user.favoriteSubcategories.filter(id => id.toString() !== subcategoryId);
 		await user.save();
 		res.json({ message: 'Subcategory removed from favorites', favoriteSubcategories: user.favoriteSubcategories });
