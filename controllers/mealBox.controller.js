@@ -107,29 +107,37 @@ exports.createMealBox = [
 	async (req, res) => {
 		try {
 			// Support form-data: req.body for text, req.files for images
-					let items = req.body.items;
-					// If items is a string (from form-data), parse it as JSON
-					if (typeof items === 'string') {
-						try {
-							items = JSON.parse(items);
-						} catch {
-							items = [];
-						}
-					}
-					const mealBox = {
-						title: req.body.title,
-						description: req.body.description,
-						minQty: req.body.minQty,
-						price: req.body.price,
-						deliveryDate: req.body.deliveryDate,
-						sampleAvailable: req.body.sampleAvailable,
-						packagingDetails: req.body.packagingDetails,
-						items,
-						vendor: req.vendorId || (req.user && req.user.id)
-					};
-			// Handle images from form-data
-			mealBox.boxImage = req.files && req.files.boxImage ? req.files.boxImage[0].originalname : '';
-			mealBox.actualImage = req.files && req.files.actualImage ? req.files.actualImage[0].originalname : '';
+			let items = req.body.items;
+			// If items is a string (from form-data), parse it as JSON
+			if (typeof items === 'string') {
+				try {
+					items = JSON.parse(items);
+				} catch {
+					items = [];
+				}
+			}
+			const mealBox = {
+				title: req.body.title,
+				description: req.body.description,
+				minQty: req.body.minQty,
+				price: req.body.price,
+				deliveryDate: req.body.deliveryDate,
+				sampleAvailable: req.body.sampleAvailable,
+				packagingDetails: req.body.packagingDetails,
+				items,
+				vendor: req.vendorId || (req.user && req.user.id)
+			};
+			// Handle images from form-data and upload to Cloudinary
+			if (req.files && req.files.boxImage) {
+				mealBox.boxImage = await cloudinaryService.uploadImage(req.files.boxImage[0].buffer);
+			} else {
+				mealBox.boxImage = '';
+			}
+			if (req.files && req.files.actualImage) {
+				mealBox.actualImage = await cloudinaryService.uploadImage(req.files.actualImage[0].buffer);
+			} else {
+				mealBox.actualImage = '';
+			}
 			const savedMealBox = await new MealBox(mealBox).save();
 			res.status(201).json({ mealBox: savedMealBox });
 		} catch (err) {
