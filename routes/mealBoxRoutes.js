@@ -1,5 +1,8 @@
 const express = require('express');
 const router = express.Router();
+// DELETE /api/mealbox/:id - delete a mealbox
+const { deleteMealBox } = require('../controllers/mealBox.controller');
+router.delete('/:id', deleteMealBox);
 const { updateMealBox, createMealBox, addMultipleCustomItemsToMealBox, addCustomItemToMealBox } = require('../controllers/mealBox.controller');
 const upload = require('../middlewares/upload');
 const { uploadCustomItemImage } = require('../controllers/upload.controller');
