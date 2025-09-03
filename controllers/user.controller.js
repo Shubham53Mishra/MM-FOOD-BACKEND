@@ -2,6 +2,9 @@
 exports.unfavoriteSubcategory = async (req, res) => {
 	try {
 		const userId = req.user && req.user.id;
+		if (!req.body || typeof req.body !== 'object') {
+			return res.status(400).json({ message: 'Request body missing or invalid' });
+		}
 		const { subcategoryId } = req.body;
 		if (!userId || !subcategoryId) {
 			return res.status(400).json({ message: 'User and subcategoryId required' });
