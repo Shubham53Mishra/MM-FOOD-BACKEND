@@ -1,3 +1,4 @@
+const cloudinaryService = require('../services/cloudinaryService');
 // Delete a mealbox by ID
 exports.deleteMealBox = async (req, res) => {
 	try {
@@ -29,12 +30,12 @@ exports.updateMealBox = [
 					update.items = [];
 				}
 			}
-			// Handle images from form-data
+			// Handle images from form-data and upload to Cloudinary
 			if (req.files && req.files.boxImage) {
-				update.boxImage = req.files.boxImage[0].originalname;
+				update.boxImage = await cloudinaryService.uploadImage(req.files.boxImage[0].buffer);
 			}
 			if (req.files && req.files.actualImage) {
-				update.actualImage = req.files.actualImage[0].originalname;
+				update.actualImage = await cloudinaryService.uploadImage(req.files.actualImage[0].buffer);
 			}
 			const mealBox = await MealBox.findByIdAndUpdate(id, update, { new: true });
 			if (!mealBox) return res.status(404).json({ message: 'MealBox not found' });
