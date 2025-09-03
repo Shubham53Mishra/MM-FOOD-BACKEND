@@ -1,3 +1,20 @@
+// Remove a subcategory from user's favorites
+exports.unfavoriteSubcategory = async (req, res) => {
+	try {
+		const userId = req.user && req.user.id;
+		const { subcategoryId } = req.body;
+		if (!userId || !subcategoryId) {
+			return res.status(400).json({ message: 'User and subcategoryId required' });
+		}
+		const user = await User.findById(userId);
+		if (!user) return res.status(404).json({ message: 'User not found' });
+		user.favoriteSubcategories = user.favoriteSubcategories.filter(id => id.toString() !== subcategoryId);
+		await user.save();
+		res.json({ message: 'Subcategory removed from favorites', favoriteSubcategories: user.favoriteSubcategories });
+	} catch (err) {
+		res.status(500).json({ message: 'Error removing favorite subcategory', error: err.message });
+	}
+};
 // Save favorite subcategories for user
 exports.saveFavoriteSubCategories = async (req, res) => {
 	try {
