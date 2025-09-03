@@ -11,7 +11,8 @@ const mealBoxSchema = new mongoose.Schema({
 	packagingDetails: String,
 	boxImage: String,      // Cloudinary URL
 	actualImage: String,   // Cloudinary URL
-	vendor: { type: mongoose.Schema.Types.ObjectId, ref: 'Vendor' }
+	vendor: { type: mongoose.Schema.Types.ObjectId, ref: 'Vendor' },
+	favoritedBy: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }]
 }, { timestamps: true });
 
 module.exports = mongoose.model('MealBox', mealBoxSchema);

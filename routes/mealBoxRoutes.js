@@ -1,5 +1,13 @@
 const express = require('express');
 const router = express.Router();
+const { favoriteMealBox, unfavoriteMealBox, getFavoriteMealBoxes } = require('../controllers/mealBox.controller');
+const auth = require('../middlewares/auth');
+// POST /api/mealbox/:id/favorite - favorite a mealbox
+router.post('/:id/favorite', auth, favoriteMealBox);
+// POST /api/mealbox/:id/unfavorite - unfavorite a mealbox
+router.post('/:id/unfavorite', auth, unfavoriteMealBox);
+// GET /api/mealbox/favorites - get all favorite mealboxes for the user
+router.get('/favorites', auth, getFavoriteMealBoxes);
 // DELETE /api/mealbox/:id - delete a mealbox
 const { deleteMealBox } = require('../controllers/mealBox.controller');
 router.delete('/:id', deleteMealBox);

@@ -1,3 +1,50 @@
+// Favorite a mealbox
+exports.favoriteMealBox = async (req, res) => {
+	try {
+		const { id } = req.params;
+		const userId = req.user && req.user.id;
+		if (!userId) return res.status(401).json({ message: 'User not authenticated' });
+		const mealBox = await MealBox.findById(id);
+		if (!mealBox) return res.status(404).json({ message: 'MealBox not found' });
+		if (!mealBox.favoritedBy.includes(userId)) {
+			mealBox.favoritedBy.push(userId);
+			await mealBox.save();
+		}
+		res.json({ message: 'MealBox favorited', mealBox });
+	} catch (err) {
+		res.status(500).json({ message: 'Error favoriting mealbox', error: err.message });
+	}
+};
+
+// Unfavorite a mealbox
+exports.unfavoriteMealBox = async (req, res) => {
+	try {
+		const { id } = req.params;
+		const userId = req.user && req.user.id;
+		if (!userId) return res.status(401).json({ message: 'User not authenticated' });
+		const mealBox = await MealBox.findById(id);
+		if (!mealBox) return res.status(404).json({ message: 'MealBox not found' });
+		mealBox.favoritedBy = mealBox.favoritedBy.filter(uid => uid.toString() !== userId);
+		await mealBox.save();
+		res.json({ message: 'MealBox unfavorited', mealBox });
+	} catch (err) {
+		res.status(500).json({ message: 'Error unfavoriting mealbox', error: err.message });
+	}
+};
+
+// Get all favorite mealboxes for a user
+exports.getFavoriteMealBoxes = async (req, res) => {
+	try {
+		const userId = req.user && req.user.id;
+		if (!userId) return res.status(401).json({ message: 'User not authenticated' });
+		const mealboxes = await MealBox.find({ favoritedBy: userId })
+			.populate('vendor', 'name email mobile image')
+			.populate('items');
+		res.json({ mealboxes });
+	} catch (err) {
+		res.status(500).json({ message: 'Error fetching favorite mealboxes', error: err.message });
+	}
+};
 const cloudinaryService = require('../services/cloudinaryService');
 // Delete a mealbox by ID
 exports.deleteMealBox = async (req, res) => {
