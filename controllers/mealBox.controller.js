@@ -1,23 +1,38 @@
 // Update a mealbox
-exports.updateMealBox = async (req, res) => {
-	try {
-		const { id } = req.params;
-		let update = req.body;
-		// If items is a string (from form-data), parse it as JSON
-		if (typeof update.items === 'string') {
-			try {
-				update.items = JSON.parse(update.items);
-			} catch {
-				update.items = [];
+// ...existing code...
+exports.updateMealBox = [
+	// Multer middleware should be defined in a central place (middleware/upload.js) and reused
+	require('../middlewares/upload').fields([
+		{ name: 'boxImage', maxCount: 1 },
+		{ name: 'actualImage', maxCount: 1 }
+	]),
+	async (req, res) => {
+		try {
+			const { id } = req.params;
+			let update = req.body || {};
+			// If items is present and is a string (from form-data), parse it as JSON
+			if (update && typeof update.items === 'string') {
+				try {
+					update.items = JSON.parse(update.items);
+				} catch {
+					update.items = [];
+				}
 			}
+			// Handle images from form-data
+			if (req.files && req.files.boxImage) {
+				update.boxImage = req.files.boxImage[0].originalname;
+			}
+			if (req.files && req.files.actualImage) {
+				update.actualImage = req.files.actualImage[0].originalname;
+			}
+			const mealBox = await MealBox.findByIdAndUpdate(id, update, { new: true });
+			if (!mealBox) return res.status(404).json({ message: 'MealBox not found' });
+			res.json({ mealBox });
+		} catch (err) {
+			res.status(500).json({ message: 'Error updating mealbox', error: err.message });
 		}
-		const mealBox = await MealBox.findByIdAndUpdate(id, update, { new: true });
-		if (!mealBox) return res.status(404).json({ message: 'MealBox not found' });
-		res.json({ mealBox });
-	} catch (err) {
-		res.status(500).json({ message: 'Error updating mealbox', error: err.message });
 	}
-};
+];
 // Add multiple custom items to an existing MealBox
 exports.addMultipleCustomItemsToMealBox = async (req, res) => {
 	try {

@@ -6,6 +6,7 @@ const { uploadCustomItemImage } = require('../controllers/upload.controller');
 const MealBox = require('../models/MealBox');
 
 // PUT /api/mealbox/:id - update a mealbox
+// PUT /api/mealbox/:id - update a mealbox (form-data supported)
 router.put('/:id', updateMealBox);
 
 // POST /api/mealbox/upload-item-image - upload image for custom item
