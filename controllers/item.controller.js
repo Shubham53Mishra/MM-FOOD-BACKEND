@@ -1,7 +1,38 @@
-const Item = require('../models/Item');
-
 const multer = require('multer');
 const upload = multer({ storage: multer.memoryStorage() });
+
+// Update an item (supports form-data for image)
+exports.updateItem = [
+	upload.single('image'),
+	async (req, res) => {
+		try {
+			const { id } = req.params;
+			const update = req.body;
+			if (req.file) {
+				update.imageUrl = req.file.originalname;
+			}
+			const item = await Item.findByIdAndUpdate(id, update, { new: true });
+			if (!item) return res.status(404).json({ message: 'Item not found' });
+			res.json({ item });
+		} catch (err) {
+			res.status(500).json({ message: 'Error updating item', error: err.message });
+		}
+	}
+];
+
+// Delete an item
+exports.deleteItem = async (req, res) => {
+	try {
+		const { id } = req.params;
+		const item = await Item.findByIdAndDelete(id);
+		if (!item) return res.status(404).json({ message: 'Item not found' });
+		res.json({ message: 'Item deleted' });
+	} catch (err) {
+		res.status(500).json({ message: 'Error deleting item', error: err.message });
+	}
+};
+const Item = require('../models/Item');
+
 
 // Create a new item (supports form-data)
 exports.createItem = [

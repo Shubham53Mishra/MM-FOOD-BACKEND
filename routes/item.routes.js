@@ -2,8 +2,14 @@ const express = require('express');
 const router = express.Router();
 
 const Item = require('../models/Item');
-const { createItem } = require('../controllers/item.controller');
+const { createItem, updateItem, deleteItem } = require('../controllers/item.controller');
 const auth = require('../middlewares/auth');
+
+// PUT /api/item/:id - update an item (form-data supported)
+router.put('/:id', auth, updateItem);
+
+// DELETE /api/item/:id - delete an item
+router.delete('/:id', auth, deleteItem);
 
 // GET /api/item - get all items
 router.get('/', async (req, res) => {
