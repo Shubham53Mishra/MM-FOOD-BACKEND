@@ -40,25 +40,29 @@ const Item = require('../models/Item');
 // Create a new item (supports form-data)
 exports.createItem = [
 	upload.single('image'),
-	async (req, res) => {
-		try {
-			// Support form-data: req.body for text, req.file for image
-			const name = req.body.name;
-			const description = req.body.description;
-			const category = req.body.category;
-			let imageUrl = req.body.imageUrl;
-			if (req.file) {
-				imageUrl = await cloudinaryService.uploadImage(req.file.buffer);
-			}
-			if (!name) {
-				return res.status(400).json({ message: 'Name is required' });
-			}
-			const vendor = req.vendorId || (req.user && req.user.id);
-			const item = new Item({ name, description, imageUrl, category, vendor });
-			await item.save();
-			res.status(201).json({ item });
-		} catch (err) {
-			res.status(500).json({ message: 'Error creating item', error: err.message });
-		}
-	}
+	 async (req, res) => {
+	 	try {
+	 		// Support form-data: req.body for text, req.file for image
+	 		const name = req.body.name;
+	 		const description = req.body.description;
+	 		const category = req.body.category;
+	 		const cost = req.body.cost;
+	 		let imageUrl = req.body.imageUrl;
+	 		if (req.file) {
+	 			imageUrl = await cloudinaryService.uploadImage(req.file.buffer);
+	 		}
+	 		if (!name) {
+	 			return res.status(400).json({ message: 'Name is required' });
+	 		}
+	 		if (!cost) {
+	 			return res.status(400).json({ message: 'Cost is required' });
+	 		}
+	 		const vendor = req.vendorId || (req.user && req.user.id);
+	 		const item = new Item({ name, description, cost, imageUrl, category, vendor });
+	 		await item.save();
+	 		res.status(201).json({ item });
+	 	} catch (err) {
+	 		res.status(500).json({ message: 'Error creating item', error: err.message });
+	 	}
+	 }
 ];
