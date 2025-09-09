@@ -92,13 +92,12 @@ router.get('/all-orders', authVendor, async (req, res) => {
     const orders = await Order.find().populate('items.category items.subCategory vendor');
     // Convert createdAt and updatedAt to IST
     const ordersWithIST = orders.map(order => {
-      const istOffset = 5.5 * 60 * 60 * 1000; // 5 hours 30 minutes in ms
-      const createdAtIST = new Date(order.createdAt.getTime() + istOffset);
-      const updatedAtIST = new Date(order.updatedAt.getTime() + istOffset);
+      // Show current IST time for both fields
+      const nowIST = new Date(Date.now() + 5.5 * 60 * 60 * 1000);
       return {
         ...order.toObject(),
-        createdAtIST: createdAtIST.toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' }),
-        updatedAtIST: updatedAtIST.toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })
+        createdAtIST: nowIST.toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' }),
+        updatedAtIST: nowIST.toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })
       };
     });
     res.json({ orders: ordersWithIST });
