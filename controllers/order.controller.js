@@ -1,3 +1,14 @@
+// Get all mealbox orders
+exports.getMealBoxOrders = async (req, res) => {
+	try {
+		const orders = await require('../models/Order').find({ orderType: 'mealbox' })
+			.populate('mealBox')
+			.populate('vendor');
+		res.json({ orders });
+	} catch (err) {
+		res.status(500).json({ message: 'Error fetching mealbox orders', error: err.message });
+	}
+};
 // Update a mealbox order
 exports.updateMealBoxOrder = async (req, res) => {
 	try {
