@@ -1,4 +1,42 @@
+const Order = require('../models/Order');
 // Favorite a mealbox
+// Create MealBox Order and return mealbox info with customer details
+exports.createMealBoxOrder = async (req, res) => {
+	try {
+		const { customerName, customerEmail, mealBoxId, quantity, vendorId } = req.body;
+		// Fetch mealbox info
+		const mealBox = await MealBox.findById(mealBoxId);
+		if (!mealBox) {
+			return res.status(404).json({ message: 'MealBox not found' });
+		}
+		// Create order
+		const order = new Order({
+			customerName,
+			customerEmail,
+			mealBox: mealBoxId,
+			quantity,
+			vendor: vendorId,
+			type: 'mealbox',
+		});
+		await order.save();
+		// Respond with mealbox info and order details
+		return res.status(201).json({
+			orderId: order._id,
+			customerName,
+			customerEmail,
+			quantity,
+			mealBox: {
+				_id: mealBox._id,
+				name: mealBox.name,
+				description: mealBox.description,
+				price: mealBox.price,
+				// Add other fields as needed
+			},
+		});
+	} catch (error) {
+		return res.status(500).json({ message: 'Server error', error: error.message });
+	}
+};
 exports.favoriteMealBox = async (req, res) => {
 	try {
 		const { id } = req.params;

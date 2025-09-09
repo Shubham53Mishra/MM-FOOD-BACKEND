@@ -1,6 +1,8 @@
 const express = require('express');
 const router = express.Router();
-const { favoriteMealBox, unfavoriteMealBox, getFavoriteMealBoxes } = require('../controllers/mealBox.controller');
+const { favoriteMealBox, unfavoriteMealBox, getFavoriteMealBoxes, createMealBoxOrder } = require('../controllers/mealBox.controller');
+// POST /api/mealbox/order - create a mealbox order
+router.post('/order', createMealBoxOrder);
 const auth = require('../middlewares/auth');
 // POST /api/mealbox/:id/favorite - favorite a mealbox
 router.post('/:id/favorite', auth, favoriteMealBox);
