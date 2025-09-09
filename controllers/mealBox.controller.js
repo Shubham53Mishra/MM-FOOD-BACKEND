@@ -1,3 +1,29 @@
+// Get all mealbox orders
+exports.getMealBoxOrders = async (req, res) => {
+	try {
+		// Find all orders of type 'mealbox' and populate mealBox info
+		const orders = await Order.find({ type: 'mealbox' })
+			.populate('mealBox')
+			.populate('vendor', 'name email');
+		// Format response
+		const result = orders.map(order => ({
+			orderId: order._id,
+			customerName: order.customerName,
+			customerEmail: order.customerEmail,
+			quantity: order.quantity,
+			vendor: order.vendor,
+			mealBox: order.mealBox ? {
+				_id: order.mealBox._id,
+				name: order.mealBox.name,
+				description: order.mealBox.description,
+				price: order.mealBox.price,
+			} : null,
+		}));
+		return res.json({ orders: result });
+	} catch (error) {
+		return res.status(500).json({ message: 'Server error', error: error.message });
+	}
+};
 const Order = require('../models/Order');
 // Favorite a mealbox
 // Create MealBox Order and return mealbox info with customer details
