@@ -1,11 +1,11 @@
 const express = require('express');
 const router = express.Router();
+const auth = require('../middlewares/auth');
 const { favoriteMealBox, unfavoriteMealBox, getFavoriteMealBoxes, createMealBoxOrder, getMealBoxOrders } = require('../controllers/mealBox.controller');
 // GET /api/mealbox/order - get all mealbox orders
 router.get('/order', getMealBoxOrders);
 // POST /api/mealbox/order - create a mealbox order
-router.post('/order', createMealBoxOrder);
-const auth = require('../middlewares/auth');
+router.post('/order', auth, createMealBoxOrder);
 // POST /api/mealbox/:id/favorite - favorite a mealbox
 router.post('/:id/favorite', auth, favoriteMealBox);
 // POST /api/mealbox/:id/unfavorite - unfavorite a mealbox
@@ -39,20 +39,22 @@ router.post('/', createMealBox);
 // GET /api/mealbox - get all mealBox documents from MealBox collection
 // GET /api/mealbox - get all mealBox documents, or only vendor's if token is present
 router.get('/', async (req, res) => {
-	try {
-		let query = {};
-		// If vendorId is set by auth middleware (token present), filter by vendor
-		if (req.vendorId || (req.user && req.user.id)) {
-			query.vendor = req.vendorId || req.user.id;
+		try {
+			let query = {};
+			// If vendorId is provided in query, filter by vendor
+			if (req.query.vendorId) {
+				query.vendor = req.query.vendorId;
+			} else if (req.vendorId || (req.user && req.user.id)) {
+				query.vendor = req.vendorId || req.user.id;
+			}
+			const mealboxes = await MealBox.find(query)
+				.populate('vendor', 'name email mobile image')
+				.populate('items');
+			res.json({ mealboxes });
+		} catch (err) {
+			res.status(500).json({ message: 'Error fetching mealboxes', error: err.message });
 		}
-		const mealboxes = await MealBox.find(query)
-		  .populate('vendor', 'name email mobile image')
-		  .populate('items');
-		res.json({ mealboxes });
-	} catch (err) {
-		res.status(500).json({ message: 'Error fetching mealboxes', error: err.message });
-	}
-});
+	});
 
 module.exports = router;
 
