@@ -7,6 +7,7 @@ const Category = require('../models/Category');
 const SubCategory = require('../models/SubCategory');
 const User = require('../models/User');
 
+const auth = require('../middlewares/auth');
 // Get total order count
 router.get('/count', async (req, res) => {
   try {
@@ -16,8 +17,12 @@ router.get('/count', async (req, res) => {
     res.status(500).json({ message: 'Error fetching order count', error: err.message });
   }
 });
-router.post('/create', async (req, res) => {
-  const { customerName, customerEmail, items, vendorId, mealBox } = req.body;
+router.post('/create', auth, async (req, res) => {
+  const { items, vendorId, mealBox } = req.body;
+  // Get user info from token
+  const customerName = req.user && req.user.name;
+  const customerEmail = req.user && req.user.email;
+  const customerMobile = req.user && req.user.mobile;
   if (!customerName || !customerEmail || !items || !vendorId) {
     return res.status(400).json({ message: "Missing required fields" });
   }
@@ -40,11 +45,7 @@ router.post('/create', async (req, res) => {
   }
 
   try {
-    // Find user by email and get deliveryAddress and mobile
-    const user = await User.findOne({ email: customerEmail });
-    let deliveryAddress = user && user.deliveryAddress ? user.deliveryAddress : '';
-    let customerMobile = user && user.mobile ? user.mobile : '';
-    const order = new Order({ customerName, customerEmail, items, vendor: vendorId, deliveryAddress, customerMobile, mealBox });
+    const order = new Order({ customerName, customerEmail, customerMobile, items, vendor: vendorId, mealBox });
     await order.save();
     res.status(201).json({ message: "Order placed", order });
   } catch (err) {
