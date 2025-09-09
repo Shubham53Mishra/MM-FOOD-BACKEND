@@ -1,5 +1,7 @@
+
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
+const Vendor = require('../models/Vendor');
 
 module.exports = async function (req, res, next) {
 	const authHeader = req.headers.authorization;
@@ -17,17 +19,30 @@ module.exports = async function (req, res, next) {
 	}
 	try {
 		const decoded = jwt.verify(token, process.env.JWT_SECRET);
-		const user = await User.findById(decoded.id);
-		if (!user) {
-			return res.status(401).json({ message: 'User not found' });
+		// Try to find user first
+		let user = await User.findById(decoded.id);
+		if (user) {
+			req.user = {
+				id: user._id,
+				name: user.fullName,
+				email: user.email,
+				mobile: user.mobile
+			};
+			return next();
 		}
-		req.user = {
-			id: user._id,
-			name: user.fullName, // Use fullName from schema
-			email: user.email,
-			mobile: user.mobile
-		};
-		next();
+		// If not user, try vendor
+		let vendor = await Vendor.findById(decoded.id);
+		if (vendor) {
+			req.user = {
+				id: vendor._id,
+				name: vendor.name,
+				email: vendor.email,
+				mobile: vendor.mobile,
+				isVendor: true
+			};
+			return next();
+		}
+		return res.status(401).json({ message: 'User not found' });
 	} catch (err) {
 		res.status(401).json({ message: 'Invalid token' });
 	}
