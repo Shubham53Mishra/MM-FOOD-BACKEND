@@ -90,7 +90,18 @@ router.get('/vendor-orders', authVendor, async (req, res) => {
 router.get('/all-orders', authVendor, async (req, res) => {
   try {
     const orders = await Order.find().populate('items.category items.subCategory vendor');
-    res.json({ orders });
+    // Convert createdAt and updatedAt to IST
+    const ordersWithIST = orders.map(order => {
+      const istOffset = 5.5 * 60 * 60 * 1000; // 5 hours 30 minutes in ms
+      const createdAtIST = new Date(order.createdAt.getTime() + istOffset);
+      const updatedAtIST = new Date(order.updatedAt.getTime() + istOffset);
+      return {
+        ...order.toObject(),
+        createdAtIST: createdAtIST.toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' }),
+        updatedAtIST: updatedAtIST.toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })
+      };
+    });
+    res.json({ orders: ordersWithIST });
   } catch (err) {
     res.status(500).json({ message: "Error fetching all orders", error: err.message });
   }
