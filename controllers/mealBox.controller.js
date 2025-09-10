@@ -25,12 +25,17 @@ exports.getMealBoxOrders = async (req, res) => {
 		if (!req.user || !req.user.isVendor) {
 			return res.status(403).json({ message: 'Access denied. Only vendors can view their orders.' });
 		}
-		const query = { vendor: req.user.id };
-		const orders = await MealBoxOrder.find(query)
-			.populate('mealBox')
+		// Find all orders for mealboxes posted by this vendor
+		const orders = await MealBoxOrder.find()
+			.populate({
+				path: 'mealBox',
+				match: { vendor: req.user.id },
+			})
 			.populate('vendor', 'name email');
+		// Only include orders where mealBox is not null (i.e., posted by this vendor)
+		const filteredOrders = orders.filter(order => order.mealBox);
 		// Format response
-		const result = orders.map(order => ({
+		const result = filteredOrders.map(order => ({
 			orderId: order._id,
 			customerName: order.customerName,
 			customerEmail: order.customerEmail,

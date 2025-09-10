@@ -22,6 +22,7 @@ module.exports = async function (req, res, next) {
 		// Try to find user first
 		let user = await User.findById(decoded.id);
 		if (user) {
+			console.log('Authenticated as user:', user.email);
 			req.user = {
 				id: user._id,
 				name: user.fullName,
@@ -33,6 +34,7 @@ module.exports = async function (req, res, next) {
 		// If not user, try vendor
 		let vendor = await Vendor.findById(decoded.id);
 		if (vendor) {
+			console.log('Authenticated as vendor:', vendor.email);
 			req.user = {
 				id: vendor._id,
 				name: vendor.name,
