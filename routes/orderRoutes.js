@@ -134,6 +134,15 @@ router.get('/all-orders', authVendor, async (req, res) => {
           return item;
         });
       }
+      // Ensure orderId is always shown in MM format
+      if (!obj.orderId) {
+        // Fallback: generate MM format from created date and _id if missing
+        const now = obj.createdAt ? new Date(obj.createdAt) : new Date();
+        const month = String(now.getMonth() + 1).padStart(2, '0');
+        const date = String(now.getDate()).padStart(2, '0');
+        const day = String(now.getDay()).padStart(2, '0');
+        obj.orderId = `MM${month}${date}${day}${month}`;
+      }
       return obj;
     });
     res.json({ orders: ordersWithIST });
