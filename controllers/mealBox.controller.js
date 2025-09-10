@@ -55,7 +55,15 @@ exports.createMealBoxOrder = async (req, res) => {
             return res.status(404).json({ message: 'MealBox not found' });
         }
         const vendorId = mealBox.vendor;
-        // Create order
+		// Generate MM format orderId
+		const now = new Date();
+		const month = String(now.getMonth() + 1).padStart(2, '0');
+		const date = String(now.getDate()).padStart(2, '0');
+		const dayShortArr = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+		const dayShort = dayShortArr[now.getDay()];
+		const customOrderId = `MM${month}${date}${dayShort}${month}`;
+
+		// Create order
 		const order = new MealBoxOrder({
 			customerName,
 			customerEmail,
@@ -64,12 +72,13 @@ exports.createMealBoxOrder = async (req, res) => {
 			quantity,
 			vendor: vendorId,
 			type: 'mealbox',
-			status: 'pending'
+			status: 'pending',
+			orderId: customOrderId
 		});
 		await order.save();
 		// Respond with mealbox info and order details
 		return res.status(201).json({
-			orderId: order._id,
+			orderId: order.orderId,
 			customerName,
 			customerEmail,
 			customerMobile,
