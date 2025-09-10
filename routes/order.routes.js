@@ -17,19 +17,39 @@ router.put('/update-mealbox/:id', updateMealBoxOrder);
 router.post('/create-mealbox', createMealBoxOrder);
 
 // Vendor auth middleware
+
 const auth = require('../middlewares/auth');
-const vendorAuth = async (req, res, next) => {
-  await auth(req, res, () => {
-    if (req.user && req.user.isVendor) return next();
-    return res.status(403).json({ message: 'Vendor authentication required' });
-  });
-};
+function requireVendor(req, res, next) {
+  if (req.user && req.user.isVendor) return next();
+  return res.status(403).json({ message: 'Vendor authentication required' });
+}
+
 
 // PUT /api/orders/confirm-mealbox/:id - confirm a mealbox order (vendor only)
 const { confirmMealBoxOrder, cancelMealBoxOrder } = require('../controllers/mealBox.controller');
-router.put('/confirm-mealbox/:id', vendorAuth, confirmMealBoxOrder);
 
-// PUT /api/orders/cancel-mealbox/:id - cancel a mealbox order (user or vendor)
-router.put('/cancel-mealbox/:id', auth, cancelMealBoxOrder);
+function vendorAuthAndHandler(handler) {
+  return function(req, res, next) {
+    auth(req, res, function(err) {
+      if (err) return next(err);
+      requireVendor(req, res, function(err2) {
+        if (err2) return next(err2);
+        handler(req, res, next);
+      });
+    });
+  };
+}
+
+function userAuthAndHandler(handler) {
+  return function(req, res, next) {
+    auth(req, res, function(err) {
+      if (err) return next(err);
+      handler(req, res, next);
+    });
+  };
+}
+
+router.put('/confirm-mealbox/:id', vendorAuthAndHandler(confirmMealBoxOrder));
+router.put('/cancel-mealbox/:id', userAuthAndHandler(cancelMealBoxOrder));
 
 module.exports = router;

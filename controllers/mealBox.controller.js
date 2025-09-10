@@ -189,17 +189,20 @@ exports.deleteMealBox = async (req, res) => {
 };
 // Update a mealbox
 // ...existing code...
-exports.updateMealBox = [
-	// Multer middleware should be defined in a central place (middleware/upload.js) and reused
-	require('../middlewares/upload').fields([
-		{ name: 'boxImage', maxCount: 1 },
-		{ name: 'actualImage', maxCount: 1 }
-	]),
-	async (req, res) => {
+// Refactored: Single middleware function for routers that expect a function, not an array
+const uploadMiddleware = require('../middlewares/upload').fields([
+	{ name: 'boxImage', maxCount: 1 },
+	{ name: 'actualImage', maxCount: 1 }
+]);
+
+exports.updateMealBox = async (req, res) => {
+	uploadMiddleware(req, res, async (err) => {
+		if (err) {
+			return res.status(400).json({ message: 'File upload error', error: err.message });
+		}
 		try {
 			const { id } = req.params;
 			let update = req.body || {};
-			// If items is present and is a string (from form-data), parse it as JSON
 			if (update && typeof update.items === 'string') {
 				try {
 					update.items = JSON.parse(update.items);
@@ -207,7 +210,6 @@ exports.updateMealBox = [
 					update.items = [];
 				}
 			}
-			// Handle images from form-data and upload to Cloudinary
 			if (req.files && req.files.boxImage) {
 				update.boxImage = await cloudinaryService.uploadImage(req.files.boxImage[0].buffer);
 			}
@@ -220,8 +222,8 @@ exports.updateMealBox = [
 		} catch (err) {
 			res.status(500).json({ message: 'Error updating mealbox', error: err.message });
 		}
-	}
-];
+	});
+};
 // Add multiple custom items to an existing MealBox
 exports.addMultipleCustomItemsToMealBox = async (req, res) => {
 	try {
