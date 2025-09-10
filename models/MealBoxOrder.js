@@ -9,7 +9,8 @@ const mealBoxOrderSchema = new mongoose.Schema({
   vendor: { type: mongoose.Schema.Types.ObjectId, ref: 'Vendor' },
   type: { type: String }, // e.g. 'mealbox'
   cancelReason: { type: String },
-  deliveryAddress: { type: String }
+  deliveryAddress: { type: String },
+  status: { type: String, default: 'pending' }
 }, { timestamps: true });
 
 module.exports = mongoose.model('MealBoxOrder', mealBoxOrderSchema);

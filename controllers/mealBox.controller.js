@@ -55,23 +55,25 @@ exports.createMealBoxOrder = async (req, res) => {
         }
         const vendorId = mealBox.vendor;
         // Create order
-        const order = new MealBoxOrder({
-            customerName,
-            customerEmail,
-            customerMobile,
-            mealBox: mealBoxId,
-            quantity,
-            vendor: vendorId,
-            type: 'mealbox',
-        });
-        await order.save();
-        // Respond with mealbox info and order details
-        return res.status(201).json({
-            orderId: order._id,
-            customerName,
-            customerEmail,
-            customerMobile,
-            quantity,
+		const order = new MealBoxOrder({
+			customerName,
+			customerEmail,
+			customerMobile,
+			mealBox: mealBoxId,
+			quantity,
+			vendor: vendorId,
+			type: 'mealbox',
+			status: 'pending'
+		});
+		await order.save();
+		// Respond with mealbox info and order details
+		return res.status(201).json({
+			orderId: order._id,
+			customerName,
+			customerEmail,
+			customerMobile,
+			quantity,
+			status: order.status,
 			mealBox: {
 				_id: mealBox._id,
 				title: mealBox.title,
@@ -83,7 +85,36 @@ exports.createMealBoxOrder = async (req, res) => {
 				boxImage: mealBox.boxImage,
 				actualImage: mealBox.actualImage,
 			},
-        });
+		});
+// Confirm a mealbox order
+exports.confirmMealBoxOrder = async (req, res) => {
+	try {
+		const { id } = req.params;
+		const order = await MealBoxOrder.findById(id);
+		if (!order) return res.status(404).json({ message: 'Order not found' });
+		order.status = 'confirmed';
+		await order.save();
+		res.json({ message: 'Order confirmed', order });
+	} catch (err) {
+		res.status(500).json({ message: 'Error confirming mealbox order', error: err.message });
+	}
+};
+
+// Cancel a mealbox order
+exports.cancelMealBoxOrder = async (req, res) => {
+	try {
+		const { id } = req.params;
+		const { reason } = req.body;
+		const order = await MealBoxOrder.findById(id);
+		if (!order) return res.status(404).json({ message: 'Order not found' });
+		order.status = 'cancelled';
+		order.cancelReason = reason;
+		await order.save();
+		res.json({ message: 'Order cancelled', order });
+	} catch (err) {
+		res.status(500).json({ message: 'Error cancelling mealbox order', error: err.message });
+	}
+};
     } catch (error) {
         return res.status(500).json({ message: 'Server error', error: error.message });
     }
