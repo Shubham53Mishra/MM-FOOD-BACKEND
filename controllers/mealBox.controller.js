@@ -21,25 +21,23 @@ exports.getMealBoxes = async (req, res) => {
 // Get all mealbox orders
 exports.getMealBoxOrders = async (req, res) => {
 	try {
-		// Show all orders if admin, else filter by vendor/user
-		if (!req.user || !req.user.id) {
-			return res.status(401).json({ message: 'Unauthorized. No user or vendor found.' });
-		}
+		// Show all orders if no token, else filter by vendor/user
 		let orders;
-		if (req.user.isAdmin) {
+		if (!req.user) {
+			// No token: show all orders (public)
+			orders = await MealBoxOrder.find()
+				.populate('mealBox')
+				.populate('vendor', 'name email');
+		} else if (req.user.isAdmin) {
 			// Admin: show all orders
 			orders = await MealBoxOrder.find()
 				.populate('mealBox')
 				.populate('vendor', 'name email');
 		} else if (req.user.isVendor) {
-			// Vendor: show orders for their mealboxes
-			orders = await MealBoxOrder.find()
-				.populate({
-					path: 'mealBox',
-					match: { vendor: req.user.id },
-				})
+			// Vendor: show only orders for mealboxes added by this vendor
+			orders = await MealBoxOrder.find({ vendor: req.user.id })
+				.populate('mealBox')
 				.populate('vendor', 'name email');
-			orders = orders.filter(order => order.mealBox);
 		} else {
 			// User: show orders where user is the customer
 			orders = await MealBoxOrder.find({ customerEmail: req.user.email })
