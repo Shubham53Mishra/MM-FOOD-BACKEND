@@ -110,6 +110,10 @@ router.get('/all-orders', authVendor, async (req, res) => {
           if (item.subCategory && item.subCategory.reviews) {
             delete item.subCategory.reviews;
           }
+          // Remove category field from item
+          if (item.category) {
+            delete item.category;
+          }
           return item;
         });
       }
