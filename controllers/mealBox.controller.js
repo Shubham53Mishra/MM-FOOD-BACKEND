@@ -22,14 +22,8 @@ exports.getMealBoxes = async (req, res) => {
 exports.getMealBoxOrders = async (req, res) => {
     try {
         const MealBoxOrder = require('../models/MealBoxOrder');
-        // Only allow vendor with 'meal' category to see all orders
+        // Only allow vendor to see all orders
         if (req.user && req.user.isVendor) {
-            const Vendor = require('../models/Vendor');
-            const vendor = await Vendor.findById(req.user.id).populate('category');
-            if (!vendor || !vendor.category || vendor.category.name.toLowerCase() !== 'meal') {
-                return res.status(401).json({ message: 'Unauthorized. No user or vendor found.' });
-            }
-            // Show all orders (no vendor filter)
             let query = {};
             if (req.query.mealBoxId) {
                 query.mealBox = req.query.mealBoxId;
