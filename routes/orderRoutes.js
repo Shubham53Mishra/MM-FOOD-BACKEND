@@ -93,10 +93,26 @@ router.get('/all-orders', authVendor, async (req, res) => {
     // Convert createdAt and updatedAt to IST
     const ordersWithIST = orders.map(order => {
       const obj = order.toObject();
+      // Remove timestamps
       delete obj.createdAt;
       delete obj.updatedAt;
       delete obj.createdAtIST;
       delete obj.updatedAtIST;
+      // Set default status
+      obj.status = 'pending';
+      // Remove vendor password if vendor exists
+      if (obj.vendor && obj.vendor.password) {
+        delete obj.vendor.password;
+      }
+      // Remove reviews from items.subCategory if present
+      if (Array.isArray(obj.items)) {
+        obj.items = obj.items.map(item => {
+          if (item.subCategory && item.subCategory.reviews) {
+            delete item.subCategory.reviews;
+          }
+          return item;
+        });
+      }
       return obj;
     });
     res.json({ orders: ordersWithIST });
