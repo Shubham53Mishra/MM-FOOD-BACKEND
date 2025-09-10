@@ -22,8 +22,14 @@ exports.getMealBoxes = async (req, res) => {
 exports.getMealBoxOrders = async (req, res) => {
 	try {
 		const MealBoxOrder = require('../models/MealBoxOrder');
-		// Show all mealbox orders to any authenticated user
 		let query = {};
+		// Only allow vendor to see their own orders
+		if (req.user && req.user.isVendor) {
+			query.vendor = req.user.id;
+		} else {
+			// Not vendor: do not show any orders
+			return res.status(403).json({ message: 'Only vendors can view their mealbox orders.' });
+		}
 		if (req.query.mealBoxId) {
 			query.mealBox = req.query.mealBoxId;
 		}
