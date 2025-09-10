@@ -22,24 +22,30 @@ exports.getMealBoxes = async (req, res) => {
 exports.getMealBoxOrders = async (req, res) => {
     try {
         const MealBoxOrder = require('../models/MealBoxOrder');
+        const MealBox = require('../models/MealBox');
         let query = {};
-        // If vendor token is present and valid, filter by vendor and 'meal' category
+
+        // Only allow vendor to see their own orders
         if (req.user && req.user.isVendor) {
             const Vendor = require('../models/Vendor');
             const vendor = await Vendor.findById(req.user.id).populate('category');
             if (!vendor || !vendor.category || vendor.category.name.toLowerCase() !== 'meal') {
                 return res.status(401).json({ message: 'Unauthorized. No user or vendor found.' });
             }
-            query.vendor = req.user.id;
-        } else if (req.user && req.user.email) {
-            // If user token, show only user's orders
-            query.customerEmail = req.user.email;
+            // Find all mealboxes for this vendor
+            const mealBoxes = await MealBox.find({ vendor: req.user.id }).select('_id');
+            const mealBoxIds = mealBoxes.map(box => box._id);
+            query.mealBox = { $in: mealBoxIds };
+        } else {
+            // Not vendor: show nothing
+            return res.status(401).json({ message: 'Unauthorized. No user or vendor found.' });
         }
-        // If mealBoxId is provided, filter by mealBoxId
+
+        // If mealBoxId is provided, filter by mealBoxId (and vendor)
         if (req.query.mealBoxId) {
             query.mealBox = req.query.mealBoxId;
         }
-        // If no token, show all orders (public)
+
         const orders = await MealBoxOrder.find(query)
             .populate('mealBox')
             .populate('vendor', 'name email');
