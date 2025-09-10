@@ -114,8 +114,9 @@ router.get('/all-orders', authVendor, async (req, res) => {
       delete obj.updatedAt;
       delete obj.createdAtIST;
       delete obj.updatedAtIST;
-      // Set default status
-      obj.status = 'pending';
+  // Show actual status from DB
+  // If status is missing, fallback to 'pending'
+  obj.status = obj.status || 'pending';
       // Remove vendor password if vendor exists
       if (obj.vendor && obj.vendor.password) {
         delete obj.vendor.password;

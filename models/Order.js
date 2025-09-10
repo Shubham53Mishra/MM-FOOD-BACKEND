@@ -18,7 +18,9 @@ const orderSchema = new mongoose.Schema({
   vendor: { type: mongoose.Schema.Types.ObjectId, ref: 'Vendor' },
   type: { type: String }, // e.g. 'mealbox'
   cancelReason: { type: String },
-  deliveryAddress: { type: String }
+  deliveryAddress: { type: String },
+  status: { type: String, default: 'pending' },
+  orderId: { type: String }
 }, { timestamps: true });
 
 
