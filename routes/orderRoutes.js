@@ -17,6 +17,7 @@ router.get('/count', async (req, res) => {
     res.status(500).json({ message: 'Error fetching order count', error: err.message });
   }
 });
+
 router.post('/create', auth, async (req, res) => {
   const { items, vendorId, mealBox } = req.body;
   // Get user info from token
@@ -44,8 +45,23 @@ router.post('/create', auth, async (req, res) => {
     }
   }
 
+  // Generate custom orderId: MM<month><date><day><month>
+  const now = new Date();
+  const month = String(now.getMonth() + 1).padStart(2, '0');
+  const date = String(now.getDate()).padStart(2, '0');
+  const day = String(now.getDay()).padStart(2, '0');
+  const customOrderId = `MM${month}${date}${day}${month}`;
+
   try {
-    const order = new Order({ customerName, customerEmail, customerMobile, items, vendor: vendorId, mealBox });
+    const order = new Order({
+      customerName,
+      customerEmail,
+      customerMobile,
+      items,
+      vendor: vendorId,
+      mealBox,
+      orderId: customOrderId
+    });
     await order.save();
     res.status(201).json({ message: "Order placed", order });
   } catch (err) {
