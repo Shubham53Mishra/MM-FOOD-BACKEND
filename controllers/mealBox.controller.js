@@ -22,54 +22,46 @@ exports.getMealBoxes = async (req, res) => {
 exports.getMealBoxOrders = async (req, res) => {
     try {
         const MealBoxOrder = require('../models/MealBoxOrder');
-        const MealBox = require('../models/MealBox');
-        let query = {};
-
-        // Only allow vendor to see their own orders
+        // Only allow vendor with 'meal' category to see all orders
         if (req.user && req.user.isVendor) {
             const Vendor = require('../models/Vendor');
             const vendor = await Vendor.findById(req.user.id).populate('category');
             if (!vendor || !vendor.category || vendor.category.name.toLowerCase() !== 'meal') {
                 return res.status(401).json({ message: 'Unauthorized. No user or vendor found.' });
             }
-            // Find all mealboxes for this vendor
-            const mealBoxes = await MealBox.find({ vendor: req.user.id }).select('_id');
-            const mealBoxIds = mealBoxes.map(box => box._id);
-            query.mealBox = { $in: mealBoxIds };
+            // Show all orders (no vendor filter)
+            let query = {};
+            if (req.query.mealBoxId) {
+                query.mealBox = req.query.mealBoxId;
+            }
+            const orders = await MealBoxOrder.find(query)
+                .populate('mealBox')
+                .populate('vendor', 'name email');
+            const result = orders.map(order => ({
+                orderId: order._id,
+                customerName: order.customerName,
+                customerEmail: order.customerEmail,
+                customerMobile: order.customerMobile,
+                quantity: order.quantity,
+                status: order.status,
+                vendor: order.vendor,
+                mealBox: order.mealBox ? {
+                    _id: order.mealBox._id,
+                    title: order.mealBox.title,
+                    description: order.mealBox.description,
+                    minQty: order.mealBox.minQty,
+                    price: order.mealBox.price,
+                    packagingDetails: order.mealBox.packagingDetails,
+                    items: order.mealBox.items,
+                    boxImage: order.mealBox.boxImage,
+                    actualImage: order.mealBox.actualImage,
+                } : null,
+            }));
+            return res.json({ orders: result });
         } else {
             // Not vendor: show nothing
             return res.status(401).json({ message: 'Unauthorized. No user or vendor found.' });
         }
-
-        // If mealBoxId is provided, filter by mealBoxId (and vendor)
-        if (req.query.mealBoxId) {
-            query.mealBox = req.query.mealBoxId;
-        }
-
-        const orders = await MealBoxOrder.find(query)
-            .populate('mealBox')
-            .populate('vendor', 'name email');
-        const result = orders.map(order => ({
-            orderId: order._id,
-            customerName: order.customerName,
-            customerEmail: order.customerEmail,
-            customerMobile: order.customerMobile,
-            quantity: order.quantity,
-            status: order.status,
-            vendor: order.vendor,
-            mealBox: order.mealBox ? {
-                _id: order.mealBox._id,
-                title: order.mealBox.title,
-                description: order.mealBox.description,
-                minQty: order.mealBox.minQty,
-                price: order.mealBox.price,
-                packagingDetails: order.mealBox.packagingDetails,
-                items: order.mealBox.items,
-                boxImage: order.mealBox.boxImage,
-                actualImage: order.mealBox.actualImage,
-            } : null,
-        }));
-        return res.json({ orders: result });
     } catch (error) {
         return res.status(500).json({ message: 'Server error', error: error.message });
     }
