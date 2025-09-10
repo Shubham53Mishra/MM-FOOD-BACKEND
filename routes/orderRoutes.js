@@ -45,12 +45,19 @@ router.post('/create', auth, async (req, res) => {
     }
   }
 
-  // Generate custom orderId: MM<month><date><day><month>
+
+  // Generate custom orderId: MM<random4digit><date><dayShort><month><orderCountToday>
   const now = new Date();
   const month = String(now.getMonth() + 1).padStart(2, '0');
   const date = String(now.getDate()).padStart(2, '0');
-  const day = String(now.getDay()).padStart(2, '0');
-  const customOrderId = `MM${month}${date}${day}${month}`;
+  const dayShortArr = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  const dayShort = dayShortArr[now.getDay()];
+  const randomNum = Math.floor(1000 + Math.random() * 9000); // 4 digit random
+  // Count orders for today
+  const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const endOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
+  const orderCountToday = await Order.countDocuments({ createdAt: { $gte: startOfDay, $lt: endOfDay } });
+  const customOrderId = `MM${randomNum}${date}${dayShort}${month}${orderCountToday + 1}`;
 
   try {
     const order = new Order({
