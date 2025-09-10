@@ -10,13 +10,14 @@ exports.getMealBoxOrders = async (req, res) => {
 			.populate('mealBox')
 			.populate('vendor', 'name email');
         // Format response
-        const result = orders.map(order => ({
-            orderId: order._id,
-            customerName: order.customerName,
-            customerEmail: order.customerEmail,
-            customerMobile: order.customerMobile,
-            quantity: order.quantity,
-            vendor: order.vendor,
+		const result = orders.map(order => ({
+			orderId: order._id,
+			customerName: order.customerName,
+			customerEmail: order.customerEmail,
+			customerMobile: order.customerMobile,
+			quantity: order.quantity,
+			status: order.status,
+			vendor: order.vendor,
 			mealBox: order.mealBox ? {
 				_id: order.mealBox._id,
 				title: order.mealBox.title,
@@ -28,7 +29,7 @@ exports.getMealBoxOrders = async (req, res) => {
 				boxImage: order.mealBox.boxImage,
 				actualImage: order.mealBox.actualImage,
 			} : null,
-        }));
+		}));
         return res.json({ orders: result });
     } catch (error) {
         return res.status(500).json({ message: 'Server error', error: error.message });
