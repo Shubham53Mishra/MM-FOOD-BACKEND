@@ -31,6 +31,9 @@ exports.getMealBoxOrders = async (req, res) => {
                 return res.status(401).json({ message: 'Unauthorized. No user or vendor found.' });
             }
             query.vendor = req.user.id;
+        } else if (req.user && req.user.email) {
+            // If user token, show only user's orders
+            query.customerEmail = req.user.email;
         }
         // If mealBoxId is provided, filter by mealBoxId
         if (req.query.mealBoxId) {
