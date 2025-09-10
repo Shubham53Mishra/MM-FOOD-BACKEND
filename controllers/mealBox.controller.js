@@ -18,56 +18,51 @@ exports.getMealBoxes = async (req, res) => {
 		res.status(500).json({ message: 'Error fetching mealboxes', error: err.message });
 	}
 };
-// Get all mealbox orders
+// GET /api/mealbox/order
 exports.getMealBoxOrders = async (req, res) => {
-	try {
-		// Vendor: show only their orders. User: show only their orders. Admin: show all. Public: show nothing.
-		let orders = [];
-		if (!req.user) {
-			// Public: show nothing
-			return res.status(401).json({ message: 'Unauthorized. No user or vendor found.' });
-	// Remove admin logic. Only vendor and user logic remains.
-		} else if (req.user.isVendor) {
-			// Vendor: show only their orders
-			orders = await MealBoxOrder.find({ vendor: req.user.id })
-				.populate('mealBox')
-				.populate('vendor', 'name email');
-		} else {
-			// User: show only their orders
-			orders = await MealBoxOrder.find({ customerEmail: req.user.email })
-				.populate('mealBox')
-				.populate('vendor', 'name email');
-		}
-		// Format response
-		const result = orders.map(order => ({
-			orderId: order._id,
-			customerName: order.customerName,
-			customerEmail: order.customerEmail,
-			customerMobile: order.customerMobile,
-			quantity: order.quantity,
-			status: order.status,
-			vendor: order.vendor,
-			mealBox: order.mealBox ? {
-				_id: order.mealBox._id,
-				title: order.mealBox.title,
-				description: order.mealBox.description,
-				minQty: order.mealBox.minQty,
-				price: order.mealBox.price,
-				packagingDetails: order.mealBox.packagingDetails,
-				items: order.mealBox.items,
-				boxImage: order.mealBox.boxImage,
-				actualImage: order.mealBox.actualImage,
-			} : null,
-		}));
-		return res.json({ orders: result });
-	} catch (error) {
-		return res.status(500).json({ message: 'Server error', error: error.message });
-	}
+    try {
+        // Only allow vendors with 'meal' category
+        if (!req.user || !req.user.isVendor) {
+            return res.status(401).json({ message: 'Unauthorized. No user or vendor found.' });
+        }
+        const Vendor = require('../models/Vendor');
+        const Category = require('../models/Category');
+        const vendor = await Vendor.findById(req.user.id).populate('category');
+        if (!vendor || !vendor.category || vendor.category.name.toLowerCase() !== 'meal') {
+            return res.status(401).json({ message: 'Unauthorized. No user or vendor found.' });
+        }
+        // Show only vendor's mealbox orders
+        const MealBoxOrder = require('../models/MealBoxOrder');
+        const orders = await MealBoxOrder.find({ vendor: req.user.id })
+            .populate('mealBox')
+            .populate('vendor', 'name email');
+        const result = orders.map(order => ({
+            orderId: order._id,
+            customerName: order.customerName,
+            customerEmail: order.customerEmail,
+            customerMobile: order.customerMobile,
+            quantity: order.quantity,
+            status: order.status,
+            vendor: order.vendor,
+            mealBox: order.mealBox ? {
+                _id: order.mealBox._id,
+                title: order.mealBox.title,
+                description: order.mealBox.description,
+                minQty: order.mealBox.minQty,
+                price: order.mealBox.price,
+                packagingDetails: order.mealBox.packagingDetails,
+                items: order.mealBox.items,
+                boxImage: order.mealBox.boxImage,
+                actualImage: order.mealBox.actualImage,
+            } : null,
+        }));
+        return res.json({ orders: result });
+    } catch (error) {
+        return res.status(500).json({ message: 'Server error', error: error.message });
+    }
 };
-const Order = require('../models/Order');
-const MealBoxOrder = require('../models/MealBoxOrder');
-// Favorite a mealbox
-// Create MealBox Order and return mealbox info with customer details
+
+// POST /api/mealbox/order
 exports.createMealBoxOrder = async (req, res) => {
     try {
         const { mealBoxId, quantity } = req.body;
@@ -79,52 +74,61 @@ exports.createMealBoxOrder = async (req, res) => {
             return res.status(401).json({ message: 'User not authenticated' });
         }
         // Fetch mealbox info
+        const MealBox = require('../models/MealBox');
+        const MealBoxOrder = require('../models/MealBoxOrder');
         const mealBox = await MealBox.findById(mealBoxId);
         if (!mealBox) {
             return res.status(404).json({ message: 'MealBox not found' });
         }
         const vendorId = mealBox.vendor;
-		// Generate MM format orderId
-		const now = new Date();
-		const month = String(now.getMonth() + 1).padStart(2, '0');
-		const date = String(now.getDate()).padStart(2, '0');
-		const dayShortArr = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
-		const dayShort = dayShortArr[now.getDay()];
-		const customOrderId = `MM${month}${date}${dayShort}${month}`;
+        // Generate MM format orderId
+        const now = new Date();
+        const month = String(now.getMonth() + 1).padStart(2, '0');
+        const date = String(now.getDate()).padStart(2, '0');
+        const dayShortArr = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+        const dayShort = dayShortArr[now.getDay()];
+        const customOrderId = `MM${month}${date}${dayShort}${month}`;
 
-		// Create order
-		const order = new MealBoxOrder({
-			customerName,
-			customerEmail,
-			customerMobile,
-			mealBox: mealBoxId,
-			quantity,
-			vendor: vendorId,
-			type: 'mealbox',
-			status: 'pending',
-			orderId: customOrderId
-		});
-		await order.save();
-		// Respond with mealbox info and order details
-		return res.status(201).json({
-			orderId: order.orderId,
-			customerName,
-			customerEmail,
-			customerMobile,
-			quantity,
-			status: order.status,
-			mealBox: {
-				_id: mealBox._id,
-				title: mealBox.title,
-				description: mealBox.description,
-				minQty: mealBox.minQty,
-				price: mealBox.price,
-				packagingDetails: mealBox.packagingDetails,
-				items: mealBox.items,
-				boxImage: mealBox.boxImage,
-				actualImage: mealBox.actualImage,
-			},
-		});
+        // Create order
+        const order = new MealBoxOrder({
+            customerName,
+            customerEmail,
+            customerMobile,
+            mealBox: mealBoxId,
+            quantity,
+            vendor: vendorId,
+            type: 'mealbox',
+            status: 'pending',
+            orderId: customOrderId
+        });
+        await order.save();
+        // Respond with mealbox info and order details
+        return res.status(201).json({
+            orderId: order.orderId,
+            customerName,
+            customerEmail,
+            customerMobile,
+            quantity,
+            status: order.status,
+            mealBox: {
+                _id: mealBox._id,
+                title: mealBox.title,
+                description: mealBox.description,
+                minQty: mealBox.minQty,
+                price: mealBox.price,
+                packagingDetails: mealBox.packagingDetails,
+                items: mealBox.items,
+                boxImage: mealBox.boxImage,
+                actualImage: mealBox.actualImage,
+            },
+        });
+    } catch (error) {
+        return res.status(500).json({ message: 'Server error', error: error.message });
+    }
+};
+const Order = require('../models/Order');
+const MealBoxOrder = require('../models/MealBoxOrder');
+// Favorite a mealbox
 // Confirm a mealbox order
 exports.confirmMealBoxOrder = async (req, res) => {
 	try {
@@ -153,10 +157,6 @@ exports.cancelMealBoxOrder = async (req, res) => {
 	} catch (err) {
 		res.status(500).json({ message: 'Error cancelling mealbox order', error: err.message });
 	}
-};
-    } catch (error) {
-        return res.status(500).json({ message: 'Server error', error: error.message });
-    }
 };
 exports.favoriteMealBox = async (req, res) => {
 	try {
