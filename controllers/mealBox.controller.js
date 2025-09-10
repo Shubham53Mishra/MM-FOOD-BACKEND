@@ -21,21 +21,29 @@ exports.getMealBoxes = async (req, res) => {
 // Get all mealbox orders
 exports.getMealBoxOrders = async (req, res) => {
 	try {
-		// Only allow vendors to access their own orders
-		if (!req.user || !req.user.isVendor) {
-			return res.status(403).json({ message: 'Access denied. Only vendors can view their orders.' });
+		// Allow both vendors and users to access their own orders
+		if (!req.user || !req.user.id) {
+			return res.status(401).json({ message: 'Unauthorized. No user or vendor found.' });
 		}
-		// Find all orders for mealboxes posted by this vendor
-		const orders = await MealBoxOrder.find()
-			.populate({
-				path: 'mealBox',
-				match: { vendor: req.user.id },
-			})
-			.populate('vendor', 'name email');
-		// Only include orders where mealBox is not null (i.e., posted by this vendor)
-		const filteredOrders = orders.filter(order => order.mealBox);
+		let orders;
+		if (req.user.isVendor) {
+			// Find all orders for mealboxes posted by this vendor
+			orders = await MealBoxOrder.find()
+				.populate({
+					path: 'mealBox',
+					match: { vendor: req.user.id },
+				})
+				.populate('vendor', 'name email');
+			// Only include orders where mealBox is not null (i.e., posted by this vendor)
+			orders = orders.filter(order => order.mealBox);
+		} else {
+			// If user, show orders where user is the customer
+			orders = await MealBoxOrder.find({ customerEmail: req.user.email })
+				.populate('mealBox')
+				.populate('vendor', 'name email');
+		}
 		// Format response
-		const result = filteredOrders.map(order => ({
+		const result = orders.map(order => ({
 			orderId: order._id,
 			customerName: order.customerName,
 			customerEmail: order.customerEmail,
