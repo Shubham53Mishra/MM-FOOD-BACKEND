@@ -1,15 +1,15 @@
 // Get all mealbox orders
 exports.getMealBoxOrders = async (req, res) => {
-    try {
-        // Find all mealbox orders and populate mealBox info
-		let query = {};
-		if (req.user && req.user.id) {
-			query.vendor = req.user.id;
+	try {
+		// Only allow vendors to access their own orders
+		if (!req.user || !req.user.isVendor) {
+			return res.status(403).json({ message: 'Access denied. Only vendors can view their orders.' });
 		}
+		const query = { vendor: req.user.id };
 		const orders = await MealBoxOrder.find(query)
 			.populate('mealBox')
 			.populate('vendor', 'name email');
-        // Format response
+		// Format response
 		const result = orders.map(order => ({
 			orderId: order._id,
 			customerName: order.customerName,
@@ -30,10 +30,10 @@ exports.getMealBoxOrders = async (req, res) => {
 				actualImage: order.mealBox.actualImage,
 			} : null,
 		}));
-        return res.json({ orders: result });
-    } catch (error) {
-        return res.status(500).json({ message: 'Server error', error: error.message });
-    }
+		return res.json({ orders: result });
+	} catch (error) {
+		return res.status(500).json({ message: 'Server error', error: error.message });
+	}
 };
 const Order = require('../models/Order');
 const MealBoxOrder = require('../models/MealBoxOrder');
