@@ -1,3 +1,23 @@
+// Get all mealboxes, or only vendor's mealboxes and orders if vendor token is present
+exports.getMealBoxes = async (req, res) => {
+	try {
+		let query = {};
+		let orders = [];
+		// If vendor token, show only vendor's mealboxes and orders
+		if (req.user && req.user.isVendor) {
+			query.vendor = req.user.id;
+			orders = await MealBoxOrder.find({ vendor: req.user.id })
+				.populate('mealBox')
+				.populate('vendor', 'name email');
+		}
+		const mealboxes = await MealBox.find(query)
+			.populate('vendor', 'name email mobile image')
+			.populate('items');
+		res.json({ mealboxes, orders });
+	} catch (err) {
+		res.status(500).json({ message: 'Error fetching mealboxes', error: err.message });
+	}
+};
 // Get all mealbox orders
 exports.getMealBoxOrders = async (req, res) => {
 	try {

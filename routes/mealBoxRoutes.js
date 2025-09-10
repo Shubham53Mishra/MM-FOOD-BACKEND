@@ -36,25 +36,9 @@ router.post('/:mealBoxId/add-item', addCustomItemToMealBox);
 // POST /api/mealbox
 router.post('/', createMealBox);
 
-// GET /api/mealbox - get all mealBox documents from MealBox collection
-// GET /api/mealbox - get all mealBox documents, or only vendor's if token is present
-router.get('/', async (req, res) => {
-		try {
-			let query = {};
-			// If vendorId is provided in query, filter by vendor
-			if (req.query.vendorId) {
-				query.vendor = req.query.vendorId;
-			} else if (req.vendorId || (req.user && req.user.id)) {
-				query.vendor = req.vendorId || req.user.id;
-			}
-			const mealboxes = await MealBox.find(query)
-				.populate('vendor', 'name email mobile image')
-				.populate('items');
-			res.json({ mealboxes });
-		} catch (err) {
-			res.status(500).json({ message: 'Error fetching mealboxes', error: err.message });
-		}
-	});
+
+const { getMealBoxes } = require('../controllers/mealBox.controller');
+router.get('/', auth, getMealBoxes);
 
 module.exports = router;
 
