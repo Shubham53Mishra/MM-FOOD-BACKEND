@@ -23,12 +23,9 @@ exports.getMealBoxOrders = async (req, res) => {
 	try {
 		const MealBoxOrder = require('../models/MealBoxOrder');
 		let query = {};
-		// Only allow vendor to see their own orders
+		// If vendor token, show only vendor's orders. If no token, show all orders.
 		if (req.user && req.user.isVendor) {
 			query.vendor = req.user.id;
-		} else {
-			// Not vendor: do not show any orders
-			return res.status(403).json({ message: 'Only vendors can view their mealbox orders.' });
 		}
 		if (req.query.mealBoxId) {
 			query.mealBox = req.query.mealBoxId;
