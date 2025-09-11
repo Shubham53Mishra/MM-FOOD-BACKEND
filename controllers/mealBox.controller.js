@@ -1,5 +1,10 @@
 exports.getMealBoxes = async (req, res) => {
-	res.send('getMealBoxes');
+	try {
+		const mealBoxes = await MealBox.find();
+		res.status(200).json({ success: true, mealBoxes });
+	} catch (error) {
+		res.status(500).json({ success: false, message: error.message });
+	}
 };
 exports.addMultipleCustomItemsToMealBox = async (req, res) => {
 	res.send('addMultipleCustomItemsToMealBox');
@@ -50,52 +55,52 @@ const cloudinary = require('../config/cloudinary');
 exports.createMealBox = async (req, res) => {
 			try {
 				const vendorId = req.user._id; // vendor token from auth middleware
-					let {
-						title,
-						description,
-						minQty,
-						price,
-						packagingDetails,
-						items
-					} = req.body;
+				let {
+					title,
+					description,
+					minQty,
+					price,
+					packagingDetails,
+					items
+				} = req.body;
 
-					// Ensure items is always an array of ObjectIds
-					if (typeof items === 'string') {
-						try {
-							// Try to parse if sent as JSON string
-							items = JSON.parse(items);
-						} catch {
-							// If comma separated, split
-							items = items.split(',').map(i => i.trim());
-						}
+				// Ensure items is always an array of ObjectIds
+				if (typeof items === 'string') {
+					try {
+						// Try to parse if sent as JSON string
+						items = JSON.parse(items);
+					} catch {
+						// If comma separated, split
+						items = items.split(',').map(i => i.trim());
 					}
-					if (!Array.isArray(items)) {
-						items = [items];
-					}
+				}
+				if (!Array.isArray(items)) {
+					items = [items];
+				}
 
-					// Upload images if provided (using buffer for memory storage)
-					let boxImageUrl = null;
-					let actualImageUrl = null;
+				// Upload images if provided (using buffer for memory storage)
+				let boxImageUrl = null;
+				let actualImageUrl = null;
 
-					// Helper to upload buffer to Cloudinary
-					const uploadToCloudinary = (buffer) => {
-						return new Promise((resolve, reject) => {
-							const stream = cloudinary.uploader.upload_stream({ resource_type: 'image' }, (error, result) => {
-								if (error) return reject(error);
-								resolve(result);
-							});
-							stream.end(buffer);
+				// Helper to upload buffer to Cloudinary
+				const uploadToCloudinary = (buffer) => {
+					return new Promise((resolve, reject) => {
+						const stream = cloudinary.uploader.upload_stream({ resource_type: 'image' }, (error, result) => {
+							if (error) return reject(error);
+							resolve(result);
 						});
-					};
+						stream.end(buffer);
+					});
+				};
 
-					if (req.files && req.files.boxImage && req.files.boxImage[0]) {
-						const boxImageResult = await uploadToCloudinary(req.files.boxImage[0].buffer);
-						boxImageUrl = boxImageResult.secure_url;
-					}
-					if (req.files && req.files.actualImage && req.files.actualImage[0]) {
-						const actualImageResult = await uploadToCloudinary(req.files.actualImage[0].buffer);
-						actualImageUrl = actualImageResult.secure_url;
-					}
+				if (req.files && req.files.boxImage && req.files.boxImage[0]) {
+					const boxImageResult = await uploadToCloudinary(req.files.boxImage[0].buffer);
+					boxImageUrl = boxImageResult.secure_url;
+				}
+				if (req.files && req.files.actualImage && req.files.actualImage[0]) {
+					const actualImageResult = await uploadToCloudinary(req.files.actualImage[0].buffer);
+					actualImageUrl = actualImageResult.secure_url;
+				}
 
 				const mealBox = new MealBox({
 					title,
