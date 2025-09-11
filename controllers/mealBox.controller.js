@@ -50,14 +50,28 @@ const cloudinary = require('../config/cloudinary');
 exports.createMealBox = async (req, res) => {
 			try {
 				const vendorId = req.user._id; // vendor token from auth middleware
-				const {
-					title,
-					description,
-					minQty,
-					price,
-					packagingDetails,
-					items
-				} = req.body;
+					let {
+						title,
+						description,
+						minQty,
+						price,
+						packagingDetails,
+						items
+					} = req.body;
+
+					// Ensure items is always an array of ObjectIds
+					if (typeof items === 'string') {
+						try {
+							// Try to parse if sent as JSON string
+							items = JSON.parse(items);
+						} catch {
+							// If comma separated, split
+							items = items.split(',').map(i => i.trim());
+						}
+					}
+					if (!Array.isArray(items)) {
+						items = [items];
+					}
 
 					// Upload images if provided (using buffer for memory storage)
 					let boxImageUrl = null;
