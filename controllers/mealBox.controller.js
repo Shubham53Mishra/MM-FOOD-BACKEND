@@ -59,19 +59,29 @@ exports.createMealBox = async (req, res) => {
 					items
 				} = req.body;
 
-				// Upload images if provided
-				let boxImageUrl = null;
-				let actualImageUrl = null;
+					// Upload images if provided (using buffer for memory storage)
+					let boxImageUrl = null;
+					let actualImageUrl = null;
 
-				// If files are missing, allow creation but warn in response
-				if (req.files && req.files.boxImage && req.files.boxImage[0]) {
-					const boxImageResult = await cloudinary.uploader.upload(req.files.boxImage[0].path);
-					boxImageUrl = boxImageResult.secure_url;
-				}
-				if (req.files && req.files.actualImage && req.files.actualImage[0]) {
-					const actualImageResult = await cloudinary.uploader.upload(req.files.actualImage[0].path);
-					actualImageUrl = actualImageResult.secure_url;
-				}
+					// Helper to upload buffer to Cloudinary
+					const uploadToCloudinary = (buffer) => {
+						return new Promise((resolve, reject) => {
+							const stream = cloudinary.uploader.upload_stream({ resource_type: 'image' }, (error, result) => {
+								if (error) return reject(error);
+								resolve(result);
+							});
+							stream.end(buffer);
+						});
+					};
+
+					if (req.files && req.files.boxImage && req.files.boxImage[0]) {
+						const boxImageResult = await uploadToCloudinary(req.files.boxImage[0].buffer);
+						boxImageUrl = boxImageResult.secure_url;
+					}
+					if (req.files && req.files.actualImage && req.files.actualImage[0]) {
+						const actualImageResult = await uploadToCloudinary(req.files.actualImage[0].buffer);
+						actualImageUrl = actualImageResult.secure_url;
+					}
 
 				const mealBox = new MealBox({
 					title,
