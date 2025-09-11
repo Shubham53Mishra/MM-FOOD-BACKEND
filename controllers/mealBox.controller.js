@@ -1,3 +1,17 @@
+// GET /api/mealbox/my - show only mealboxes added by logged-in vendor
+exports.getMyMealBoxes = async (req, res) => {
+	try {
+		if (!req.user || !req.user.isVendor) {
+			return res.status(403).json({ message: 'Only vendors can view their mealboxes.' });
+		}
+		const mealboxes = await require('../models/MealBox').find({ vendor: req.user.id })
+			.populate('vendor', 'name email mobile image')
+			.populate('items');
+		res.json({ mealboxes });
+	} catch (err) {
+		res.status(500).json({ message: 'Error fetching vendor mealboxes', error: err.message });
+	}
+};
 // Get all mealboxes, or only vendor's mealboxes and orders if vendor token is present
 exports.getMealBoxes = async (req, res) => {
 	try {
@@ -321,6 +335,10 @@ exports.createMealBox = [
 					items = [];
 				}
 			}
+			// Force items to be ObjectIds
+			if (Array.isArray(items)) {
+				items = items.map(id => typeof id === 'string' ? require('mongoose').Types.ObjectId(id) : id);
+			}
 			const mealBox = {
 				title: req.body.title,
 				description: req.body.description,
@@ -330,7 +348,7 @@ exports.createMealBox = [
 				sampleAvailable: req.body.sampleAvailable,
 				packagingDetails: req.body.packagingDetails,
 				items,
-				vendor: req.vendorId || (req.user && req.user.id)
+				vendor: req.user && req.user.id
 			};
 			// Handle images from form-data and upload to Cloudinary
 			if (req.files && req.files.boxImage) {
