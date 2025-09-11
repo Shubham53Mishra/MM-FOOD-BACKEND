@@ -54,9 +54,6 @@ exports.createItem = [
 	 		if (!name) {
 	 			return res.status(400).json({ message: 'Name is required' });
 	 		}
-	 		if (!cost) {
-	 			return res.status(400).json({ message: 'Cost is required' });
-	 		}
 	 		const vendor = req.vendorId || (req.user && req.user.id);
 	 		const item = new Item({ name, description, cost, imageUrl, category, vendor });
 	 		await item.save();
