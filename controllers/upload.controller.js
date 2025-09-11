@@ -1,3 +1,6 @@
+exports.uploadCustomItemImage = async (req, res) => {
+	res.send('uploadCustomItemImage');
+};
 const cloudinaryService = require('../services/cloudinaryService');
 
 // Upload image to Cloudinary and return URL

@@ -35,8 +35,8 @@ router.post('/:mealBoxId/add-items', addMultipleCustomItemsToMealBox);
 // POST /api/mealbox/:mealBoxId/add-item - add a custom item to a mealbox
 router.post('/:mealBoxId/add-item', addCustomItemToMealBox);
 
-// POST /api/mealbox
-router.post('/', createMealBox);
+// POST /api/mealbox (form-data: boxImage, actualImage, fields)
+router.post('/', auth, upload.fields([{ name: 'boxImage' }, { name: 'actualImage' }]), createMealBox);
 
 
 const { getMealBoxes } = require('../controllers/mealBox.controller');
