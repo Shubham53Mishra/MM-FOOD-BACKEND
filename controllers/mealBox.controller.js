@@ -1,7 +1,12 @@
 exports.getMealBoxes = async (req, res) => {
 	try {
-		const mealBoxes = await MealBox.find();
-		res.status(200).json({ success: true, mealBoxes });
+			let query = {};
+			// If vendor token is present, filter by vendor
+			if (req.user && req.user._id) {
+				query.vendor = req.user._id;
+			}
+			const mealBoxes = await MealBox.find(query);
+			res.status(200).json({ success: true, mealBoxes });
 	} catch (error) {
 		res.status(500).json({ success: false, message: error.message });
 	}
