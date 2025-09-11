@@ -37,7 +37,17 @@ exports.getFavoriteMealBoxes = async (req, res) => {
 };
 
 exports.createMealBoxOrder = async (req, res) => {
-	res.send('createMealBoxOrder');
+	try {
+		res.status(200).json({
+			success: true,
+			message: 'MealBox order received',
+			body: req.body,
+			files: req.files || req.file || null,
+			user: req.user || null
+		});
+	} catch (error) {
+		res.status(500).json({ success: false, message: error.message });
+	}
 };
 
 exports.getMealBoxOrders = async (req, res) => {
