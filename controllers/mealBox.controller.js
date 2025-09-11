@@ -38,11 +38,16 @@ exports.getFavoriteMealBoxes = async (req, res) => {
 
 exports.createMealBoxOrder = async (req, res) => {
 	try {
+		const { mealBoxId, quantity } = req.body;
+		const mealBox = await MealBox.findById(mealBoxId).populate('vendor');
+		if (!mealBox) {
+			return res.status(404).json({ success: false, message: 'MealBox not found' });
+		}
 		res.status(200).json({
 			success: true,
 			message: 'MealBox order received',
-			body: req.body,
-			files: req.files || req.file || null,
+			mealBox,
+			quantity,
 			user: req.user || null
 		});
 	} catch (error) {
