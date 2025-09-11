@@ -337,7 +337,8 @@ exports.createMealBox = [
 			}
 			// Force items to be ObjectIds
 			if (Array.isArray(items)) {
-				items = items.map(id => typeof id === 'string' ? require('mongoose').Types.ObjectId(id) : id);
+				const mongoose = require('mongoose');
+				items = items.map(id => typeof id === 'string' ? new mongoose.Types.ObjectId(id) : id);
 			}
 			const mealBox = {
 				title: req.body.title,
