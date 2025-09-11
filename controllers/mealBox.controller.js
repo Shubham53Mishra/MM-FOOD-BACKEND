@@ -57,13 +57,18 @@ exports.createMealBoxOrder = async (req, res) => {
 
 exports.getMealBoxOrders = async (req, res) => {
 	try {
-		let query = {};
-		// If vendor token is present, filter orders by vendor
-		if (req.user && req.user._id) {
-			query.vendor = req.user._id;
-		}
-		// Assuming you have a MealBoxOrder model
 		const MealBoxOrder = require('../models/MealBoxOrder');
+		// Find all mealboxes owned by this vendor
+		let mealBoxIds = [];
+		if (req.user && req.user._id) {
+			const mealBoxes = await MealBox.find({ vendor: req.user._id });
+			mealBoxIds = mealBoxes.map(mb => mb._id);
+		}
+		// Find orders for those mealboxes
+		let query = {};
+		if (mealBoxIds.length > 0) {
+			query.mealBox = { $in: mealBoxIds };
+		}
 		const orders = await MealBoxOrder.find(query).populate('mealBox vendor');
 		res.status(200).json({ success: true, orders });
 	} catch (error) {
