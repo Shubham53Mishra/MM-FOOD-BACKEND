@@ -43,14 +43,22 @@ exports.createMealBoxOrder = async (req, res) => {
 		if (!mealBox) {
 			return res.status(404).json({ success: false, message: 'MealBox not found' });
 		}
-			res.status(200).json({
-				success: true,
-				message: 'MealBox order received',
-				mealBox,
-				quantity,
-				user: req.user || null,
-				vendorId: mealBox.vendor?._id || mealBox.vendor || null
-			});
+				let vendorId = null;
+				if (mealBox.vendor) {
+					if (typeof mealBox.vendor === 'object' && mealBox.vendor._id) {
+						vendorId = mealBox.vendor._id;
+					} else {
+						vendorId = mealBox.vendor;
+					}
+				}
+				res.status(200).json({
+					success: true,
+					message: 'MealBox order received',
+					mealBox,
+					quantity,
+					user: req.user || null,
+					vendorId
+				});
 	} catch (error) {
 		res.status(500).json({ success: false, message: error.message });
 	}
