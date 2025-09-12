@@ -94,20 +94,20 @@ exports.getMealBoxOrders = async (req, res) => {
 			console.log('Vendor ObjectId from token:', req.user._id);
 			// Only show orders where mealBox.vendor in DB matches token
 			orders = orders.filter(order => {
-				if (order.mealBox && order.mealBox._id) {
-					// Fetch the mealBox from DB to get the true vendor ObjectId
-					// Synchronous DB calls are not possible in filter, so use the populated vendor field
+				if (order.mealBox && order.mealBox.vendor) {
 					let vendorId;
-					if (order.mealBox.vendor && typeof order.mealBox.vendor === 'object' && order.mealBox.vendor._id) {
+					if (typeof order.mealBox.vendor === 'object' && order.mealBox.vendor._id) {
 						vendorId = String(order.mealBox.vendor._id);
 					} else {
 						vendorId = String(order.mealBox.vendor);
 					}
 					const match = vendorId === String(req.user._id);
-					console.log('Order', order._id, 'mealBox.vendor:', vendorId, 'token:', req.user._id, 'match:', match);
+					if (!match) {
+						console.log('Filtered out order', order._id, 'mealBox.vendor:', vendorId, 'token:', req.user._id);
+					}
 					return match;
 				}
-				console.log('Order', order._id, 'no mealBox or vendor');
+				console.log('Order', order._id, 'no mealBox.vendor');
 				return false;
 			});
 		} else {
