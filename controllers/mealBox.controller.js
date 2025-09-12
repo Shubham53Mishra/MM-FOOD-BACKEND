@@ -157,26 +157,29 @@ exports.createMealBox = async (req, res) => {
 					actualImageUrl = actualImageResult.secure_url;
 				}
 
-				const mealBox = new MealBox({
-					title,
-					description,
-					minQty,
-					price,
-					packagingDetails,
-					items,
-					boxImage: boxImageUrl,
-					actualImage: actualImageUrl,
-					vendor: vendorId
-				});
+					const mealBox = new MealBox({
+						title,
+						description,
+						minQty,
+						price,
+						packagingDetails,
+						items,
+						boxImage: boxImageUrl,
+						actualImage: actualImageUrl,
+						vendor: vendorId
+					});
 
-				await mealBox.save();
-				res.status(201).json({
-					success: true,
-					mealBox,
-					boxImageUrl,
-					actualImageUrl,
-					warning: (!boxImageUrl || !actualImageUrl) ? 'One or more images were not uploaded.' : undefined
-				});
+					await mealBox.save();
+					// Populate vendor details for response
+					await mealBox.populate({ path: 'vendor', select: '_id name email mobile' });
+					res.status(201).json({
+						success: true,
+						mealBox,
+						vendor: mealBox.vendor,
+						boxImageUrl,
+						actualImageUrl,
+						warning: (!boxImageUrl || !actualImageUrl) ? 'One or more images were not uploaded.' : undefined
+					});
 			} catch (error) {
 				res.status(500).json({ success: false, message: error.message });
 			}
