@@ -37,9 +37,11 @@ exports.getFavoriteMealBoxes = async (req, res) => {
 };
 
 exports.createMealBoxOrder = async (req, res) => {
+	console.log('mealBox.vendor:', mealBox.vendor);
 	try {
 		const { mealBoxId, quantity } = req.body;
-		const mealBox = await MealBox.findById(mealBoxId).populate('vendor');
+		// Ensure vendor is populated and returned
+		const mealBox = await MealBox.findById(mealBoxId).populate({ path: 'vendor', select: '_id name email mobile' });
 		if (!mealBox) {
 			return res.status(404).json({ success: false, message: 'MealBox not found' });
 		}
@@ -51,14 +53,14 @@ exports.createMealBoxOrder = async (req, res) => {
 						vendorId = mealBox.vendor;
 					}
 				}
-				res.status(200).json({
-					success: true,
-					message: 'MealBox order received',
-					mealBox,
-					quantity,
-					user: req.user || null,
-					vendorId
-				});
+		res.status(200).json({
+			success: true,
+			message: 'MealBox order received',
+			mealBox,
+			vendor: mealBox.vendor || null,
+			quantity,
+			user: req.user || null
+		});
 	} catch (error) {
 		res.status(500).json({ success: false, message: error.message });
 	}
