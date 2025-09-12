@@ -93,6 +93,7 @@ router.get('/profile', authVendor, async (req, res) => {
     }
     // Always return mobile, even if empty
     res.json({
+      id: vendor._id,
       name: vendor.name,
       email: vendor.email,
       mobile: vendor.mobile || "",
