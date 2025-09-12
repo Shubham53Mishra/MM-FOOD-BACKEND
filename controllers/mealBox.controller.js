@@ -46,33 +46,41 @@ exports.getFavoriteMealBoxes = async (req, res) => {
 
 exports.createMealBoxOrder = async (req, res) => {
 	try {
-		const { mealBoxId, quantity } = req.body;
-		// Ensure vendor is populated and returned
+		const { mealBoxId, quantity, customerName, customerEmail, customerMobile, deliveryAddress, type } = req.body;
 		const mealBox = await MealBox.findById(mealBoxId).populate({ path: 'vendor', select: '_id name email mobile' });
-			console.log('mealBox.vendor:', mealBox ? mealBox.vendor : null);
 		if (!mealBox) {
 			return res.status(404).json({ success: false, message: 'MealBox not found' });
 		}
-				let vendorId = null;
-				if (mealBox.vendor) {
-					if (typeof mealBox.vendor === 'object' && mealBox.vendor._id) {
-						vendorId = mealBox.vendor._id;
-					} else {
-						vendorId = mealBox.vendor;
-					}
-				}
-		res.status(200).json({
-			success: true,
-			message: 'MealBox order received',
-			mealBox,
-			vendor: mealBox.vendor || null,
-			quantity,
-			user: req.user || null
-		});
-		} catch (error) {
-			console.error('MealBoxOrder error:', error);
-			res.status(500).json({ success: false, message: error.message, stack: error.stack });
+		let vendorId = null;
+		if (mealBox.vendor) {
+			if (typeof mealBox.vendor === 'object' && mealBox.vendor._id) {
+				vendorId = mealBox.vendor._id;
+			} else {
+				vendorId = mealBox.vendor;
+			}
 		}
+		// Save MealBoxOrder to DB
+		const order = new MealBoxOrder({
+			customerName,
+			customerEmail,
+			customerMobile,
+			mealBox: mealBox._id,
+			quantity,
+			vendor: vendorId,
+			type: type || 'mealbox',
+			deliveryAddress,
+			status: 'pending'
+		});
+		await order.save();
+		res.status(201).json({
+			success: true,
+			message: 'MealBox order created',
+			order
+		});
+	} catch (error) {
+		console.error('MealBoxOrder error:', error);
+		res.status(500).json({ success: false, message: error.message, stack: error.stack });
+	}
 };
 
 exports.getMealBoxOrders = async (req, res) => {
