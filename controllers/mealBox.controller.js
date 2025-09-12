@@ -89,26 +89,27 @@ exports.getMealBoxOrders = async (req, res) => {
 		const MealBoxOrder = require('../models/MealBoxOrder');
 		let orders = [];
 		if (req.user && req.user._id) {
-			// Get all orders, populate mealBox and vendor
-			orders = await MealBoxOrder.find().populate('mealBox vendor');
-			console.log('Vendor ObjectId from token:', req.user._id);
-			// Only show orders where mealBox.vendor in DB matches token
+			const tokenVendorId = req.user._id;
+			// Find only orders for this vendor and type 'mealbox'
+			orders = await MealBoxOrder.find({
+				vendor: tokenVendorId,
+				type: 'mealbox'
+			}).populate('mealBox vendor');
+			// Final strict filter: only orders where both order.vendor and mealBox.vendor match token
 			orders = orders.filter(order => {
-				if (order.mealBox && order.mealBox.vendor) {
-					let vendorId;
-					if (typeof order.mealBox.vendor === 'object' && order.mealBox.vendor._id) {
-						vendorId = String(order.mealBox.vendor._id);
-					} else {
-						vendorId = String(order.mealBox.vendor);
+				function normalizeVendor(vendorField) {
+					if (!vendorField) return null;
+					if (typeof vendorField === 'object') {
+						if (vendorField._id) return String(vendorField._id);
+						if (vendorField.toHexString) return vendorField.toHexString();
+						return String(vendorField);
 					}
-					const match = vendorId === String(req.user._id);
-					if (!match) {
-						console.log('Filtered out order', order._id, 'mealBox.vendor:', vendorId, 'token:', req.user._id);
-					}
-					return match;
+					return String(vendorField);
 				}
-				console.log('Order', order._id, 'no mealBox.vendor');
-				return false;
+				const tokenVendorIdStr = String(tokenVendorId);
+				const orderVendorId = normalizeVendor(order.vendor);
+				const mealBoxVendorId = normalizeVendor(order.mealBox && order.mealBox.vendor);
+				return orderVendorId === tokenVendorIdStr && mealBoxVendorId === tokenVendorIdStr;
 			});
 		} else {
 			// No vendor token, return all orders
