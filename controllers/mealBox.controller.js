@@ -61,9 +61,10 @@ exports.createMealBoxOrder = async (req, res) => {
 			quantity,
 			user: req.user || null
 		});
-	} catch (error) {
-		res.status(500).json({ success: false, message: error.message });
-	}
+		} catch (error) {
+			console.error('MealBoxOrder error:', error);
+			res.status(500).json({ success: false, message: error.message, stack: error.stack });
+		}
 };
 
 exports.getMealBoxOrders = async (req, res) => {
