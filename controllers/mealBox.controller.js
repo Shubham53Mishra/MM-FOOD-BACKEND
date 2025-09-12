@@ -108,6 +108,7 @@ const cloudinary = require('../config/cloudinary');
 
 // Create MealBox Combo
 exports.createMealBox = async (req, res) => {
+	const vendorId = req.user._id;
 	console.log('Creating mealbox with vendor:', vendorId);
 			try {
 				const vendorId = req.user._id; // vendor token from auth middleware
