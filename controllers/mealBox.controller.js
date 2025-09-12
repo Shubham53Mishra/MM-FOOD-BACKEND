@@ -89,15 +89,19 @@ exports.getMealBoxOrders = async (req, res) => {
 		const MealBoxOrder = require('../models/MealBoxOrder');
 		let orders = [];
 		if (req.user && req.user._id) {
-			// Find all mealboxes owned by this vendor
-			const mealBoxes = await MealBox.find({ vendor: req.user._id });
-			const mealBoxIds = mealBoxes.map(mb => mb._id);
-			if (mealBoxIds.length === 0) {
-				// Vendor has no mealboxes, return empty array
-				return res.status(200).json({ success: true, orders: [] });
-			}
-			// Find orders for those mealboxes only
-			orders = await MealBoxOrder.find({ mealBox: { $in: mealBoxIds } }).populate('mealBox vendor');
+			// Get all orders, populate mealBox and vendor
+			orders = await MealBoxOrder.find().populate('mealBox vendor');
+			// Only show orders where mealBox.vendor matches token
+			orders = orders.filter(order => {
+				if (order.mealBox && order.mealBox.vendor) {
+					// vendor can be ObjectId or populated object
+					if (typeof order.mealBox.vendor === 'object' && order.mealBox.vendor._id) {
+						return String(order.mealBox.vendor._id) === String(req.user._id);
+					}
+					return String(order.mealBox.vendor) === String(req.user._id);
+				}
+				return false;
+			});
 		} else {
 			// No vendor token, return all orders
 			orders = await MealBoxOrder.find().populate('mealBox vendor');
