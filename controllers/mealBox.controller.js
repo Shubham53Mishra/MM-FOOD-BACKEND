@@ -1,12 +1,17 @@
 exports.getMealBoxes = async (req, res) => {
 	try {
-			let query = {};
-			// If vendor token is present, filter by vendor
-			if (req.user && req.user._id) {
-				query.vendor = req.user._id;
-			}
-			const mealBoxes = await MealBox.find(query);
-			res.status(200).json({ success: true, mealBoxes });
+		let vendorId;
+		if (req.user && req.user._id) {
+			vendorId = req.user._id;
+		} else if (req.user && req.user.email) {
+			const vendor = await Vendor.findOne({ email: req.user.email });
+			vendorId = vendor ? vendor._id : null;
+		}
+		if (!vendorId) {
+			return res.status(401).json({ success: false, message: 'Unauthorized: Vendor token required.' });
+		}
+		const mealBoxes = await MealBox.find({ vendor: vendorId });
+		res.status(200).json({ success: true, mealBoxes });
 	} catch (error) {
 		res.status(500).json({ success: false, message: error.message });
 	}
@@ -186,7 +191,6 @@ exports.createMealBox = async (req, res) => {
 						actualImage: actualImageUrl,
 						vendor: vendorId
 					});
-
 								await mealBox.save();
 								// Populate vendor details for response
 								const populatedMealBox = await MealBox.findById(mealBox._id).populate({ path: 'vendor', select: '_id name email mobile' });
