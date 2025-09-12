@@ -37,11 +37,11 @@ exports.getFavoriteMealBoxes = async (req, res) => {
 };
 
 exports.createMealBoxOrder = async (req, res) => {
-	console.log('mealBox.vendor:', mealBox.vendor);
 	try {
 		const { mealBoxId, quantity } = req.body;
 		// Ensure vendor is populated and returned
 		const mealBox = await MealBox.findById(mealBoxId).populate({ path: 'vendor', select: '_id name email mobile' });
+			console.log('mealBox.vendor:', mealBox ? mealBox.vendor : null);
 		if (!mealBox) {
 			return res.status(404).json({ success: false, message: 'MealBox not found' });
 		}
