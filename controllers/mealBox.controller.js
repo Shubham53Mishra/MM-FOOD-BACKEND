@@ -91,15 +91,23 @@ exports.getMealBoxOrders = async (req, res) => {
 		if (req.user && req.user._id) {
 			// Get all orders, populate mealBox and vendor
 			orders = await MealBoxOrder.find().populate('mealBox vendor');
-			// Only show orders where mealBox.vendor matches token
+			console.log('Vendor ObjectId from token:', req.user._id);
+			// Only show orders where mealBox.vendor in DB matches token
 			orders = orders.filter(order => {
-				if (order.mealBox && order.mealBox.vendor) {
-					// vendor can be ObjectId or populated object
-					if (typeof order.mealBox.vendor === 'object' && order.mealBox.vendor._id) {
-						return String(order.mealBox.vendor._id) === String(req.user._id);
+				if (order.mealBox && order.mealBox._id) {
+					// Fetch the mealBox from DB to get the true vendor ObjectId
+					// Synchronous DB calls are not possible in filter, so use the populated vendor field
+					let vendorId;
+					if (order.mealBox.vendor && typeof order.mealBox.vendor === 'object' && order.mealBox.vendor._id) {
+						vendorId = String(order.mealBox.vendor._id);
+					} else {
+						vendorId = String(order.mealBox.vendor);
 					}
-					return String(order.mealBox.vendor) === String(req.user._id);
+					const match = vendorId === String(req.user._id);
+					console.log('Order', order._id, 'mealBox.vendor:', vendorId, 'token:', req.user._id, 'match:', match);
+					return match;
 				}
+				console.log('Order', order._id, 'no mealBox or vendor');
 				return false;
 			});
 		} else {
@@ -193,6 +201,7 @@ exports.createMealBox = async (req, res) => {
 			}
 
 			// Always save vendor info in mealbox
+			const mongoose = require('mongoose');
 			const mealBox = new MealBox({
 				title,
 				description,
@@ -202,7 +211,7 @@ exports.createMealBox = async (req, res) => {
 				items,
 				boxImage: boxImageUrl,
 				actualImage: actualImageUrl,
-				vendor: vendorId
+				vendor: mongoose.Types.ObjectId(vendorId)
 			});
 			await mealBox.save();
 
