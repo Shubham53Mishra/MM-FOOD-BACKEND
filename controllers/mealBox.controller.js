@@ -108,12 +108,16 @@ const cloudinary = require('../config/cloudinary');
 
 // Create MealBox Combo
 exports.createMealBox = async (req, res) => {
+		console.log('Authenticated user:', req.user);
 		let vendorId;
 		if (req.user && req.user._id) {
 			vendorId = req.user._id;
 		} else if (req.user && req.user.email) {
 			const vendor = await Vendor.findOne({ email: req.user.email });
 			vendorId = vendor ? vendor._id : null;
+			if (!vendor) {
+				console.log('No vendor found for email:', req.user.email);
+			}
 		}
 		if (!vendorId) {
 			console.log('Vendor not found for user:', req.user);
