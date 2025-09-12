@@ -12,6 +12,7 @@ exports.getMealBoxes = async (req, res) => {
 			return res.status(401).json({ success: false, message: 'Unauthorized: Vendor token required.' });
 		}
 		console.log('GET /api/mealbox for vendorId:', vendorId);
+		// Only show mealboxes for this vendor
 		const mealBoxes = await MealBox.find({ vendor: vendorId });
 		console.log('Mealboxes found:', mealBoxes.length);
 		res.status(200).json({ success: true, mealBoxes });
