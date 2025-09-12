@@ -202,6 +202,10 @@ exports.createMealBox = async (req, res) => {
 
 			// Always save vendor info in mealbox
 			const mongoose = require('mongoose');
+			let vendorObjId = vendorId;
+			if (typeof vendorId === 'string') {
+				vendorObjId = new mongoose.Types.ObjectId(vendorId);
+			}
 			const mealBox = new MealBox({
 				title,
 				description,
@@ -211,7 +215,7 @@ exports.createMealBox = async (req, res) => {
 				items,
 				boxImage: boxImageUrl,
 				actualImage: actualImageUrl,
-				vendor: mongoose.Types.ObjectId(vendorId)
+				vendor: vendorObjId
 			});
 			await mealBox.save();
 
