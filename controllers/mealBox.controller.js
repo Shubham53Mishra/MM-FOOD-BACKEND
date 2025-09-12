@@ -110,11 +110,13 @@ const cloudinary = require('../config/cloudinary');
 exports.createMealBox = async (req, res) => {
 		console.log('Authenticated user:', req.user);
 		let vendorId;
+		let vendorObj = null;
 		if (req.user && req.user._id) {
 			vendorId = req.user._id;
 		} else if (req.user && req.user.email) {
 			const vendor = await Vendor.findOne({ email: req.user.email });
 			vendorId = vendor ? vendor._id : null;
+			vendorObj = vendor ? vendor : null;
 			if (!vendor) {
 				console.log('No vendor found for email:', req.user.email);
 			}
@@ -190,10 +192,19 @@ exports.createMealBox = async (req, res) => {
 								const populatedMealBox = await MealBox.findById(mealBox._id).populate({ path: 'vendor', select: '_id name email mobile' });
 								const mealBoxObj = populatedMealBox.toObject();
 								console.log('Populated vendor:', mealBoxObj.vendor);
-								// If vendor is not populated, show vendor ObjectId and log for debugging
+								// If vendor is not populated, show vendor info from DB lookup if available
 								if (!mealBoxObj.vendor || Object.keys(mealBoxObj.vendor).length === 0) {
 									console.log('Vendor not populated, using ObjectId:', vendorId);
-									mealBoxObj.vendor = { _id: vendorId };
+									if (vendorObj) {
+										mealBoxObj.vendor = {
+											_id: vendorObj._id,
+											name: vendorObj.name,
+											email: vendorObj.email,
+											mobile: vendorObj.mobile
+										};
+									} else {
+										mealBoxObj.vendor = { _id: vendorId };
+									}
 								}
 								res.status(201).json({
 									success: true,
