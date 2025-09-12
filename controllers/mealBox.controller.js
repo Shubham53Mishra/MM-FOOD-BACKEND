@@ -88,15 +88,8 @@ exports.getMealBoxOrders = async (req, res) => {
 		const MealBoxOrder = require('../models/MealBoxOrder');
 		let orders = [];
 		if (req.user && req.user._id) {
-			// Find all mealboxes owned by this vendor
-			const mealBoxes = await MealBox.find({ vendor: req.user._id });
-			const mealBoxIds = mealBoxes.map(mb => mb._id);
-			if (mealBoxIds.length === 0) {
-				// Vendor has no mealboxes, return empty array
-				return res.status(200).json({ success: true, orders: [] });
-			}
-			// Find orders for those mealboxes only
-			orders = await MealBoxOrder.find({ mealBox: { $in: mealBoxIds } }).populate('mealBox vendor');
+			// Only show orders for this vendor
+			orders = await MealBoxOrder.find({ vendor: req.user._id }).populate('mealBox vendor');
 		} else {
 			// No vendor token, return all orders
 			orders = await MealBoxOrder.find().populate('mealBox vendor');
