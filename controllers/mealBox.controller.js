@@ -1,4 +1,5 @@
 exports.getMealBoxes = async (req, res) => {
+	console.log('GET /api/mealbox for vendorId:', vendorId);
 	try {
 		let vendorId;
 		if (req.user && req.user._id) {
@@ -11,7 +12,8 @@ exports.getMealBoxes = async (req, res) => {
 			return res.status(401).json({ success: false, message: 'Unauthorized: Vendor token required.' });
 		}
 		const mealBoxes = await MealBox.find({ vendor: vendorId });
-		res.status(200).json({ success: true, mealBoxes });
+	console.log('Mealboxes found:', mealBoxes.length);
+	res.status(200).json({ success: true, mealBoxes });
 	} catch (error) {
 		res.status(500).json({ success: false, message: error.message });
 	}
