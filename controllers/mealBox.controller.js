@@ -169,17 +169,19 @@ exports.createMealBox = async (req, res) => {
 						vendor: vendorId
 					});
 
-					await mealBox.save();
-					// Populate vendor details for response
-					await mealBox.populate({ path: 'vendor', select: '_id name email mobile' });
-					res.status(201).json({
-						success: true,
-						mealBox,
-						vendor: mealBox.vendor,
-						boxImageUrl,
-						actualImageUrl,
-						warning: (!boxImageUrl || !actualImageUrl) ? 'One or more images were not uploaded.' : undefined
-					});
+						await mealBox.save();
+						// Populate vendor details for response
+						await mealBox.populate({ path: 'vendor', select: '_id name email mobile' });
+						// Convert to object and add vendor inside mealBox
+						const mealBoxObj = mealBox.toObject();
+						mealBoxObj.vendor = mealBox.vendor;
+						res.status(201).json({
+							success: true,
+							mealBox: mealBoxObj,
+							boxImageUrl,
+							actualImageUrl,
+							warning: (!boxImageUrl || !actualImageUrl) ? 'One or more images were not uploaded.' : undefined
+						});
 			} catch (error) {
 				res.status(500).json({ success: false, message: error.message });
 			}
