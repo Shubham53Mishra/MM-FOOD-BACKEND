@@ -183,8 +183,9 @@ exports.createMealBox = async (req, res) => {
 								const populatedMealBox = await MealBox.findById(mealBox._id).populate({ path: 'vendor', select: '_id name email mobile' });
 								const mealBoxObj = populatedMealBox.toObject();
 								console.log('Populated vendor:', mealBoxObj.vendor);
-								// If vendor is not populated, show vendor ObjectId
+								// If vendor is not populated, show vendor ObjectId and log for debugging
 								if (!mealBoxObj.vendor || Object.keys(mealBoxObj.vendor).length === 0) {
+									console.log('Vendor not populated, using ObjectId:', vendorId);
 									mealBoxObj.vendor = { _id: vendorId };
 								}
 								res.status(201).json({
