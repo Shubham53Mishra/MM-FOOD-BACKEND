@@ -1,12 +1,14 @@
 exports.getMealBoxes = async (req, res) => {
 
 	try {
-		let vendorId = null;
-		if (req.user && req.user._id) {
-			vendorId = req.user._id;
-		} else if (req.user && req.user.email) {
-			const vendor = await Vendor.findOne({ email: req.user.email });
-			vendorId = vendor ? vendor._id : null;
+		let vendorId = req.body.vendorId || null;
+		if (!vendorId) {
+			if (req.user && req.user._id) {
+				vendorId = req.user._id;
+			} else if (req.user && req.user.email) {
+				const vendor = await Vendor.findOne({ email: req.user.email });
+				vendorId = vendor ? vendor._id : null;
+			}
 		}
 		if (!vendorId) {
 			return res.status(401).json({ success: false, message: 'Unauthorized: Vendor token required.' });
