@@ -108,6 +108,7 @@ const cloudinary = require('../config/cloudinary');
 
 // Create MealBox Combo
 exports.createMealBox = async (req, res) => {
+	console.log('Creating mealbox with vendor:', vendorId);
 			try {
 				const vendorId = req.user._id; // vendor token from auth middleware
 				let {
@@ -169,21 +170,18 @@ exports.createMealBox = async (req, res) => {
 						vendor: vendorId
 					});
 
-							await mealBox.save();
-							// Populate vendor details for response
-							await mealBox.populate({ path: 'vendor', select: '_id name email mobile' });
-							// Convert to object and add vendor inside mealBox
-							const mealBoxObj = mealBox.toObject();
-							if (!mealBoxObj.vendor) {
-								mealBoxObj.vendor = { _id: vendorId };
-							}
-							res.status(201).json({
-								success: true,
-								mealBox: mealBoxObj,
-								boxImageUrl,
-								actualImageUrl,
-								warning: (!boxImageUrl || !actualImageUrl) ? 'One or more images were not uploaded.' : undefined
-							});
+								await mealBox.save();
+								// Populate vendor details for response
+								const populatedMealBox = await MealBox.findById(mealBox._id).populate({ path: 'vendor', select: '_id name email mobile' });
+								const mealBoxObj = populatedMealBox.toObject();
+								console.log('Populated vendor:', mealBoxObj.vendor);
+								res.status(201).json({
+									success: true,
+									mealBox: mealBoxObj,
+									boxImageUrl,
+									actualImageUrl,
+									warning: (!boxImageUrl || !actualImageUrl) ? 'One or more images were not uploaded.' : undefined
+								});
 			} catch (error) {
 				res.status(500).json({ success: false, message: error.message });
 			}
