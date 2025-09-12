@@ -89,18 +89,8 @@ exports.getMealBoxOrders = async (req, res) => {
 		const MealBoxOrder = require('../models/MealBoxOrder');
 		let orders = [];
 		if (req.user && req.user._id) {
-			// Only show orders for this vendor, by vendor field and by mealBox.vendor
-			orders = await MealBoxOrder.find({ vendor: req.user._id }).populate({
-				path: 'mealBox',
-				populate: { path: 'vendor', select: '_id name email mobile' }
-			}).populate('vendor');
-			// Filter out orders where mealBox.vendor does not match token
-			orders = orders.filter(order => {
-				if (order.mealBox && order.mealBox.vendor && order.mealBox.vendor._id) {
-					return String(order.mealBox.vendor._id) === String(req.user._id);
-				}
-				return false;
-			});
+			// Only show orders for this vendor
+			orders = await MealBoxOrder.find({ vendor: req.user._id }).populate('mealBox vendor');
 		} else {
 			// No vendor token, return all orders
 			orders = await MealBoxOrder.find().populate('mealBox vendor');
