@@ -13,7 +13,7 @@ exports.getMealBoxes = async (req, res) => {
 		}
 		console.log('GET /api/mealbox for vendorId:', vendorId);
 	// Only show mealboxes for this vendor, and populate items for full info
-	const mealBoxes = await MealBox.find({ vendor: vendorId }).populate('items');
+	const mealBoxes = await MealBox.find({ vendor: vendorId }).populate({ path: 'items', model: 'Item' });
 	console.log('Mealboxes found:', mealBoxes.length);
 	res.status(200).json({ success: true, mealBoxes });
 	} catch (error) {
