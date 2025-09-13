@@ -132,6 +132,32 @@ exports.getMyMealBoxes = async (req, res) => {
 	}
 };
 
+// Confirm a mealbox order (vendor only)
+exports.confirmMealBoxOrder = async (req, res) => {
+	try {
+		const orderId = req.params.id;
+		const vendorId = req.user._id;
+		// Find the order and ensure it belongs to this vendor
+		const order = await MealBoxOrder.findById(orderId).populate('mealBox vendor');
+		if (!order) {
+			return res.status(404).json({ success: false, message: 'Order not found' });
+		}
+		// Check vendor matches
+		const orderVendorId = String(order.vendor && order.vendor._id ? order.vendor._id : order.vendor);
+		const mealBoxVendorId = String(order.mealBox && order.mealBox.vendor ? order.mealBox.vendor : '');
+		const tokenVendorId = String(vendorId);
+		if (orderVendorId !== tokenVendorId || mealBoxVendorId !== tokenVendorId) {
+			return res.status(403).json({ success: false, message: 'Unauthorized: You can only confirm your own mealbox orders.' });
+		}
+		// Update status to confirmed
+		order.status = 'confirmed';
+		await order.save();
+		res.status(200).json({ success: true, message: 'Order confirmed', order });
+	} catch (error) {
+		res.status(500).json({ success: false, message: error.message });
+	}
+};
+
 const MealBox = require('../models/MealBox');
 const MealBoxOrder = require('../models/MealBoxOrder');
 const Vendor = require('../models/Vendor');
