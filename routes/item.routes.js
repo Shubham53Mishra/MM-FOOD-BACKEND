@@ -13,7 +13,7 @@ router.delete('/:id', auth, deleteItem);
 
 // GET /api/item - get all items
 // GET /api/item - get all items, or only vendor's if token is present
-router.get('/', async (req, res) => {
+router.get('/', auth, async (req, res) => {
 	try {
 		let query = {};
 		// If vendorId is set by auth middleware (token present), filter by vendor
