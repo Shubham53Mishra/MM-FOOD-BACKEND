@@ -1,21 +1,70 @@
+// Cancel mealbox order by mealbox_id and vendor, with reason
+exports.cancelMealBoxOrder = async (req, res) => {
+	try {
+		const vendorId = req.user && req.user._id;
+		const mealBoxId = req.params.id;
+		const { reason } = req.body;
+		if (!vendorId) {
+			return res.status(401).json({ success: false, message: 'Vendor authentication required.' });
+		}
+		if (!mealBoxId) {
+			return res.status(400).json({ success: false, message: 'MealBox ID required.' });
+		}
+		if (!reason) {
+			return res.status(400).json({ success: false, message: 'Cancel reason required.' });
+		}
+		// Find the order for this mealbox and vendor with status 'pending' or 'confirmed'
+		const order = await MealBoxOrder.findOne({ mealBox: mealBoxId, vendor: vendorId, status: { $in: ['pending', 'confirmed'] } });
+		if (!order) {
+			return res.status(404).json({ success: false, message: 'Order not found for this mealbox and vendor.' });
+		}
+		order.status = 'cancelled';
+		order.cancelReason = reason;
+		await order.save();
+		res.status(200).json({ success: true, message: 'Order cancelled.', order });
+	} catch (error) {
+		res.status(500).json({ success: false, message: error.message });
+	}
+};
+// Confirm mealbox order by mealbox_id and vendor
+exports.confirmMealBoxOrder = async (req, res) => {
+	try {
+		const vendorId = req.user && req.user._id;
+		const mealBoxId = req.params.id;
+		if (!vendorId) {
+			return res.status(401).json({ success: false, message: 'Vendor authentication required.' });
+		}
+		if (!mealBoxId) {
+			return res.status(400).json({ success: false, message: 'MealBox ID required.' });
+		}
+		// Find the order for this mealbox and vendor with status 'pending'
+		const order = await MealBoxOrder.findOne({ mealBox: mealBoxId, vendor: vendorId, status: 'pending' });
+		if (!order) {
+			return res.status(404).json({ success: false, message: 'Order not found for this mealbox and vendor.' });
+		}
+		order.status = 'confirmed';
+		await order.save();
+		res.status(200).json({ success: true, message: 'Order confirmed.', order });
+	} catch (error) {
+		res.status(500).json({ success: false, message: error.message });
+	}
+};
 exports.getMealBoxes = async (req, res) => {
 
 	try {
-		let vendorId = null;
+		let mealBoxes;
 		if (req.user && req.user._id) {
-			vendorId = req.user._id;
-		} else if (req.user && req.user.email) {
-			const vendor = await Vendor.findOne({ email: req.user.email });
-			vendorId = vendor ? vendor._id : null;
+			// Vendor token present, show only their mealboxes
+			const vendorId = req.user._id;
+			console.log('GET /api/mealbox for vendorId:', vendorId);
+			mealBoxes = await MealBox.find({ vendor: vendorId }).populate({ path: 'items', model: 'Item' });
+			console.log('Mealboxes found:', mealBoxes.length);
+		} else {
+			// No token, show all mealboxes
+			mealBoxes = await MealBox.find().populate({ path: 'items', model: 'Item' });
+			console.log('GET /api/mealbox for all users. Mealboxes found:', mealBoxes.length);
 		}
-		if (!vendorId) {
-			return res.status(401).json({ success: false, message: 'Unauthorized: Vendor token required.' });
-		}
-		console.log('GET /api/mealbox for vendorId:', vendorId);
-	// Only show mealboxes for this vendor, and populate items for full info
-	const mealBoxes = await MealBox.find({ vendor: vendorId }).populate({ path: 'items', model: 'Item' });
-	console.log('Mealboxes found:', mealBoxes.length);
-	res.status(200).json({ success: true, mealBoxes });
+		res.status(200).json({ success: true, mealBoxes });
 	} catch (error) {
 		res.status(500).json({ success: false, message: error.message });
 	}

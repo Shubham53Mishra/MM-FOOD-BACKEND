@@ -3,7 +3,7 @@ const router = express.Router();
 const auth = require('../middlewares/auth');
 const { favoriteMealBox, unfavoriteMealBox, getFavoriteMealBoxes, createMealBoxOrder, getMealBoxOrders, getMyMealBoxes } = require('../controllers/mealBox.controller');
 // GET /api/mealbox/my - show only mealboxes added by logged-in vendor
-router.get('/my', auth, getMyMealBoxes);
+// router.get('/my', auth, getMyMealBoxes); // Removed as per request
 // GET /api/mealbox/order - get all mealbox orders
 router.get('/order', getMealBoxOrders);
 // POST /api/mealbox/order - create a mealbox order
@@ -40,7 +40,7 @@ router.post('/', auth, upload.fields([{ name: 'boxImage' }, { name: 'actualImage
 
 
 const { getMealBoxes } = require('../controllers/mealBox.controller');
-router.get('/', auth, getMealBoxes);
+router.get('/', getMealBoxes);
 
 module.exports = router;
 
