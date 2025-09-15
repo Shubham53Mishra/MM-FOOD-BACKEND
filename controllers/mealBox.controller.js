@@ -1,7 +1,7 @@
 // Cancel mealbox order by mealbox_id and vendor, with reason
 exports.cancelMealBoxOrder = async (req, res) => {
 	try {
-		const orderId = req.params.id;
+	const orderId = req.params.orderId;
 		const vendorId = req.user && req.user._id;
 		const { reason } = req.body;
 		if (!orderId) {
