@@ -7,9 +7,20 @@ exports.getOrderTracking = async (req, res) => {
 		}
 		res.status(200).json({
 			success: true,
-			deliveryTime: order.deliveryTime,
-			deliveryDate: order.deliveryDate,
-			status: order.status
+			order: {
+				_id: order._id,
+				customerName: order.customerName,
+				customerEmail: order.customerEmail,
+				customerMobile: order.customerMobile,
+				items: order.items,
+				vendor: order.vendor,
+				status: order.status,
+				orderId: order.orderId,
+				createdAt: order.createdAt,
+				updatedAt: order.updatedAt,
+				deliveryTime: order.deliveryTime || null,
+				deliveryDate: order.deliveryDate || null
+			}
 		});
 	} catch (error) {
 		res.status(500).json({ success: false, message: error.message });
@@ -104,8 +115,8 @@ exports.confirmOrder = async (req, res) => {
 				orderId: order.orderId,
 				createdAt: order.createdAt,
 				updatedAt: order.updatedAt,
-				deliveryTime: order.deliveryTime,
-				deliveryDate: order.deliveryDate
+				deliveryTime: order.deliveryTime || req.body.deliveryTime || null,
+				deliveryDate: order.deliveryDate || req.body.deliveryDate || null
 			}
 		});
     } catch (error) {
