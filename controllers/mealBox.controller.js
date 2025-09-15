@@ -299,7 +299,19 @@ exports.unfavoriteMealBox = async (req, res) => {
 	res.status(200).json({ success: true, message: 'unfavoriteMealBox placeholder' });
 };
 exports.deleteMealBox = async (req, res) => {
-	res.status(200).json({ success: true, message: 'deleteMealBox placeholder' });
+    try {
+        const mealBoxId = req.params.id || req.params.mealBoxId;
+        if (!mealBoxId) {
+            return res.status(400).json({ success: false, message: 'MealBox ID required.' });
+        }
+        const deleted = await MealBox.findByIdAndDelete(mealBoxId);
+        if (!deleted) {
+            return res.status(404).json({ success: false, message: 'MealBox not found.' });
+        }
+        res.status(200).json({ success: true, message: 'MealBox deleted successfully.', mealBox: deleted });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
 };
 exports.updateMealBox = async (req, res) => {
 	res.status(200).json({ success: true, message: 'updateMealBox placeholder' });
@@ -310,4 +322,3 @@ exports.addCustomItemToMealBox = async (req, res) => {
 
 // Fix for destructuring import in routes
 module.exports = exports;
- 
