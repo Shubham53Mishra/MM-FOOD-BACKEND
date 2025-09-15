@@ -96,60 +96,6 @@ exports.addMultipleCustomItemsToMealBox = async (req, res) => {
 	res.send('addMultipleCustomItemsToMealBox');
 };
 
-exports.addCustomItemToMealBox = async (req, res) => {
-	res.send('addCustomItemToMealBox');
-};
-exports.createMealBox = async (req, res) => {
-	try {
-		// Accept form-data fields
-		const { title, description, minQty, price, deliveryDate, packagingDetails, sampleAvailable } = req.body;
-		// Accept images from upload.fields
-		const boxImage = req.files && req.files.boxImage ? req.files.boxImage[0].path : undefined;
-		const actualImage = req.files && req.files.actualImage ? req.files.actualImage[0].path : undefined;
-		// Accept vendor from auth
-		const vendor = req.user && req.user._id;
-		// Validate required fields
-		if (!title || !minQty || !price || !deliveryDate || !vendor) {
-			return res.status(400).json({ success: false, message: 'Missing required fields.' });
-		}
-		// Create new MealBox
-		// Support prepareOrderDays (number of days from now) or deliveryDate
-		let deliveryDateIST;
-		if (req.body.prepareOrderDays) {
-			// Calculate deliveryDate from days
-			const days = Number(req.body.prepareOrderDays);
-			const now = new Date();
-			deliveryDateIST = new Date(now.getTime() + days * 24 * 60 * 60 * 1000);
-		} else if (deliveryDate && !deliveryDate.endsWith('+05:30')) {
-			// If not already in IST, convert
-			const dateObj = new Date(deliveryDate);
-			deliveryDateIST = new Date(dateObj.getTime() + (5.5 * 60 * 60 * 1000));
-		} else {
-			deliveryDateIST = new Date(deliveryDate);
-		}
-		const mealBox = new MealBox({
-			title,
-			description,
-			minQty: Number(minQty),
-			price: Number(price),
-			deliveryDate: deliveryDateIST,
-			packagingDetails,
-			sampleAvailable: sampleAvailable === 'true' || sampleAvailable === true,
-			boxImage,
-			actualImage,
-			vendor
-		});
-		await mealBox.save();
-		res.status(201).json({ success: true, message: 'MealBox created', mealBox });
-	} catch (error) {
-		res.status(500).json({ success: false, message: error.message });
-	}
-};
-
-exports.unfavoriteMealBox = async (req, res) => {
-	res.send('unfavoriteMealBox');
-};
-
 exports.getFavoriteMealBoxes = async (req, res) => {
 	res.send('getFavoriteMealBoxes');
 };
@@ -280,117 +226,89 @@ const cloudinary = require('../config/cloudinary');
 
 // Create MealBox Combo
 exports.createMealBox = async (req, res) => {
-
-		console.log('Authenticated user:', req.user);
-		let vendorId;
-		let vendorObj = null;
-		if (req.user && req.user._id) {
-			vendorId = req.user._id;
-		} else if (req.user && req.user.email) {
-			const vendor = await Vendor.findOne({ email: req.user.email });
-			vendorId = vendor ? vendor._id : null;
-			vendorObj = vendor ? vendor : null;
-			if (!vendor) {
-				console.log('No vendor found for email:', req.user.email);
+	try {
+		// Accept form-data fields
+		const { title, description, minQty, price, deliveryDate, prepareOrderDays, packagingDetails, sampleAvailable, items } = req.body;
+		// Accept images from upload.fields
+		let boxImageUrl = null;
+		let actualImageUrl = null;
+		if (req.files && req.files.boxImage && req.files.boxImage[0]) {
+			boxImageUrl = req.files.boxImage[0].path || req.files.boxImage[0].secure_url;
+		}
+		if (req.files && req.files.actualImage && req.files.actualImage[0]) {
+			actualImageUrl = req.files.actualImage[0].path || req.files.actualImage[0].secure_url;
+		}
+		// Accept vendor from auth
+		const vendor = req.user && req.user._id;
+		// Validate required fields
+		if (!title || !minQty || !price || !(deliveryDate || prepareOrderDays) || !vendor) {
+			return res.status(400).json({ success: false, message: 'Missing required fields.' });
+		}
+		// Calculate deliveryDate
+		let deliveryDateIST;
+		if (prepareOrderDays) {
+			const days = Number(prepareOrderDays);
+			const now = new Date();
+			deliveryDateIST = new Date(now.getTime() + days * 24 * 60 * 60 * 1000);
+		} else if (deliveryDate && !deliveryDate.endsWith('+05:30')) {
+			const dateObj = new Date(deliveryDate);
+			deliveryDateIST = new Date(dateObj.getTime() + (5.5 * 60 * 60 * 1000));
+		} else {
+			deliveryDateIST = new Date(deliveryDate);
+		}
+		// Ensure items is always an array of ObjectIds
+		let itemsArr = items;
+		if (typeof itemsArr === 'string') {
+			try {
+				itemsArr = JSON.parse(itemsArr);
+			} catch {
+				itemsArr = itemsArr.split(',').map(i => i.trim());
 			}
 		}
-		if (!vendorId) {
-			console.log('Vendor not found for user:', req.user);
-			return res.status(400).json({ success: false, message: 'Vendor not found or not authenticated.' });
+		if (!Array.isArray(itemsArr)) {
+			itemsArr = [itemsArr];
 		}
-		console.log('Creating mealbox with vendor:', vendorId);
-		try {
-			let {
-				title,
-				description,
-				minQty,
-				price,
-				packagingDetails,
-				items
-			} = req.body;
+		// Create new MealBox
+		const mealBox = new MealBox({
+			title,
+			description,
+			minQty: Number(minQty),
+			price: Number(price),
+			deliveryDate: deliveryDateIST,
+			packagingDetails,
+			sampleAvailable: sampleAvailable === 'true' || sampleAvailable === true,
+			boxImage: boxImageUrl,
+			actualImage: actualImageUrl,
+			vendor,
+			items: itemsArr
+		});
+		await mealBox.save();
+		// Populate vendor details for response
+		const populatedMealBox = await MealBox.findById(mealBox._id).populate({ path: 'vendor', select: '_id name email mobile' });
+		res.status(201).json({ success: true, message: 'MealBox created', mealBox: populatedMealBox });
+	} catch (error) {
+		res.status(500).json({ success: false, message: error.message });
+	}
+};
 
-			// Ensure items is always an array of ObjectIds
-			if (typeof items === 'string') {
-				try {
-					items = JSON.parse(items);
-				} catch {
-					items = items.split(',').map(i => i.trim());
-				}
-			}
-			if (!Array.isArray(items)) {
-				items = [items];
-			}
 
-			let boxImageUrl = null;
-			let actualImageUrl = null;
+// Placeholder implementations for missing handlers
+exports.favoriteMealBox = async (req, res) => {
+	res.status(200).json({ success: true, message: 'favoriteMealBox placeholder' });
+};
+exports.unfavoriteMealBox = async (req, res) => {
+	res.status(200).json({ success: true, message: 'unfavoriteMealBox placeholder' });
+};
+exports.deleteMealBox = async (req, res) => {
+	res.status(200).json({ success: true, message: 'deleteMealBox placeholder' });
+};
+exports.updateMealBox = async (req, res) => {
+	res.status(200).json({ success: true, message: 'updateMealBox placeholder' });
+};
+exports.addCustomItemToMealBox = async (req, res) => {
+	res.status(200).json({ success: true, message: 'addCustomItemToMealBox placeholder' });
+};
 
-			const uploadToCloudinary = (buffer) => {
-				return new Promise((resolve, reject) => {
-					const stream = cloudinary.uploader.upload_stream({ resource_type: 'image' }, (error, result) => {
-						if (error) return reject(error);
-						resolve(result);
-					});
-					stream.end(buffer);
-				});
-			};
-
-			if (req.files && req.files.boxImage && req.files.boxImage[0]) {
-				const boxImageResult = await uploadToCloudinary(req.files.boxImage[0].buffer);
-				boxImageUrl = boxImageResult.secure_url;
-			}
-			if (req.files && req.files.actualImage && req.files.actualImage[0]) {
-				const actualImageResult = await uploadToCloudinary(req.files.actualImage[0].buffer);
-				actualImageUrl = actualImageResult.secure_url;
-			}
-
-			// Always save vendor info in mealbox
-			const mongoose = require('mongoose');
-			let vendorObjId = vendorId;
-			if (typeof vendorId === 'string') {
-				vendorObjId = new mongoose.Types.ObjectId(vendorId);
-			}
-			const mealBox = new MealBox({
-				title,
-				description,
-				minQty,
-				price,
-				packagingDetails,
-				items,
-				boxImage: boxImageUrl,
-				actualImage: actualImageUrl,
-				vendor: vendorObjId
-			});
-			await mealBox.save();
-
-			// Populate vendor details for response
-			const populatedMealBox = await MealBox.findById(mealBox._id).populate({ path: 'vendor', select: '_id name email mobile' });
-			const mealBoxObj = populatedMealBox.toObject();
-			console.log('Populated vendor:', mealBoxObj.vendor);
-
-			// Always include vendor info in response
-			if (!mealBoxObj.vendor || Object.keys(mealBoxObj.vendor).length === 0) {
-				console.log('Vendor not populated, using ObjectId:', vendorId);
-				if (vendorObj) {
-					mealBoxObj.vendor = {
-						_id: vendorObj._id,
-						name: vendorObj.name,
-						email: vendorObj.email,
-						mobile: vendorObj.mobile
-					};
-				} else {
-					mealBoxObj.vendor = { _id: vendorId };
-				}
-			}
-
-			res.status(201).json({
-				success: true,
-				mealBox: mealBoxObj,
-				boxImageUrl,
-				actualImageUrl,
-				warning: (!boxImageUrl || !actualImageUrl) ? 'One or more images were not uploaded.' : undefined
-			});
-		} catch (error) {
-			res.status(500).json({ success: false, message: error.message });
-		}
-	};
+// Fix for destructuring import in routes
+module.exports = exports;
  

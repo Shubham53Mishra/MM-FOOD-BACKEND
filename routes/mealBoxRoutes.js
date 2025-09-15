@@ -3,6 +3,8 @@ const express = require('express');
 const router = express.Router();
 const auth = require('../middlewares/auth');
 const upload = require('../middlewares/upload');
+const mealBoxController = require('../controllers/mealBox.controller');
+console.log('mealBoxController:', mealBoxController); // DEBUG: See what is imported
 const {
 	cancelMealBoxOrder,
 	confirmMealBoxOrder,
@@ -16,8 +18,9 @@ const {
 	updateMealBox,
 	createMealBox,
 	addMultipleCustomItemsToMealBox,
-	addCustomItemToMealBox
-} = require('../controllers/mealBox.controller');
+	addCustomItemToMealBox,
+	getMealBoxes
+} = mealBoxController;
 const { uploadCustomItemImage } = require('../controllers/upload.controller');
 
 // Cancel mealbox order
@@ -48,7 +51,6 @@ router.post('/:mealBoxId/add-item', addCustomItemToMealBox);
 // POST /api/mealbox (form-data: boxImage, actualImage, fields)
 router.post('/', auth, upload.fields([{ name: 'boxImage' }, { name: 'actualImage' }]), createMealBox);
 // GET /api/mealbox - get all mealboxes (public or vendor filtered)
-const { getMealBoxes } = require('../controllers/mealBox.controller');
 router.get('/', getMealBoxes);
 
 module.exports = router;
