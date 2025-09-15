@@ -38,12 +38,12 @@ exports.confirmMealBoxOrder = async (req, res) => {
 		if (!order) {
 			return res.status(404).json({ success: false, message: 'Order not found.' });
 		}
-		// Defensive: check mealBox and vendor
+		// Defensive: log missing fields but still allow confirmation
 		if (!order.mealBox) {
-			return res.status(400).json({ success: false, message: 'MealBox not found in order.' });
+			console.warn('MealBox not found in order:', order._id);
 		}
 		if (!order.vendor) {
-			return res.status(400).json({ success: false, message: 'Vendor not found in order.' });
+			console.warn('Vendor not found in order:', order._id);
 		}
 		order.status = 'confirmed';
 		await order.save();
@@ -53,7 +53,8 @@ exports.confirmMealBoxOrder = async (req, res) => {
 			order
 		});
 	} catch (error) {
-		res.status(500).json({ success: false, message: error.message });
+		console.error('ConfirmMealBoxOrder error:', error);
+		res.status(500).json({ success: false, message: error.message, stack: error.stack });
 	}
 };
 exports.getMealBoxes = async (req, res) => {
