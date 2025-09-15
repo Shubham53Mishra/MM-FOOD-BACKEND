@@ -115,8 +115,8 @@ exports.confirmOrder = async (req, res) => {
 				orderId: order.orderId,
 				createdAt: order.createdAt,
 				updatedAt: order.updatedAt,
-				deliveryTime: order.deliveryTime || req.body.deliveryTime || null,
-				deliveryDate: order.deliveryDate || req.body.deliveryDate || null
+				deliveryTime: order.deliveryTime !== undefined ? order.deliveryTime : (req.body.deliveryTime || null),
+				deliveryDate: order.deliveryDate !== undefined ? order.deliveryDate : (req.body.deliveryDate || null)
 			}
 		});
     } catch (error) {
@@ -127,8 +127,13 @@ exports.confirmOrder = async (req, res) => {
 exports.getConfirmedOrdersWithTracking = async (req, res) => {
     try {
         const Order = require('../models/Order');
-        const orders = await Order.find({ status: 'confirmed' }, 'deliveryTime deliveryDate status').lean();
-        res.status(200).json({ success: true, orders });
+		const orders = await Order.find({ status: 'confirmed' }).lean();
+		const result = orders.map(order => ({
+			status: order.status,
+			deliveryTime: order.deliveryTime || null,
+			deliveryDate: order.deliveryDate || null
+		}));
+		res.status(200).json({ success: true, orders: result });
     } catch (error) {
         res.status(500).json({ success: false, message: error.message });
     }
