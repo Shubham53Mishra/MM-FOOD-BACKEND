@@ -214,113 +214,88 @@ const cloudinary = require('../config/cloudinary');
 
 // Create MealBox Combo
 exports.createMealBox = async (req, res) => {
-	try {
-		// Accept form-data fields
-	const { title, description, minQty, price, prepareOrderDays, packagingDetails, sampleAvailable, items } = req.body;
-		// Accept images from upload.fields and upload to Cloudinary
-		let boxImageUrl = null;
-		let actualImageUrl = null;
-		const cloudinaryUpload = async (file) => {
-			if (!file) return null;
-			const result = await cloudinary.uploader.upload(file.path, { folder: 'mealbox' });
-			return result.secure_url;
-		};
-		if (req.files && req.files.boxImage && req.files.boxImage[0]) {
-			boxImageUrl = await cloudinaryUpload(req.files.boxImage[0]);
-		}
-		if (req.files && req.files.actualImage && req.files.actualImage[0]) {
-			actualImageUrl = await cloudinaryUpload(req.files.actualImage[0]);
-		}
-		// Accept vendor from auth
-		const vendor = req.user && req.user._id;
-		// Debug log for received fields
-		console.log('Received fields:', {
-			title,
-			description,
-			minQty,
-			price,
-			prepareOrderDays,
-			sampleAvailable,
-			items,
-			packagingDetails,
-			boxImage: req.files && req.files.boxImage,
-			actualImage: req.files && req.files.actualImage,
-			vendor
-		});
-	// Validate required fields (prepareOrderDays required, deliveryDate removed)
-	if (!title || !minQty || !price || !prepareOrderDays || !vendor || !items || !packagingDetails || !(req.files && req.files.boxImage && req.files.actualImage)) {
-			return res.status(400).json({
-				success: false,
-				message: 'Missing required fields. Make sure you are sending all fields as form-data and images as files.',
-				received: {
-					title,
-					description,
-					minQty,
-					price,
-					prepareOrderDays,
-					sampleAvailable,
-					items,
-					packagingDetails,
-					boxImage: req.files && req.files.boxImage,
-					actualImage: req.files && req.files.actualImage,
-					vendor
-				}
-			});
-		}
-		// No deliveryDate calculation, just use prepareOrderDays
-		// Ensure items is always an array of ObjectIds
-		let itemsArr = items;
-		if (typeof itemsArr === 'string') {
-			try {
-				itemsArr = JSON.parse(itemsArr);
-			} catch {
-				itemsArr = itemsArr.split(',').map(i => i.trim());
+		try {
+			// Accept form-data fields
+			const { title, description, minQty, price, prepareOrderDays, packagingDetails, sampleAvailable, items } = req.body;
+			// Accept images from upload.fields and upload to Cloudinary
+			let boxImageUrl = null;
+			let actualImageUrl = null;
+			const cloudinaryUpload = async (file) => {
+				if (!file) return null;
+				const result = await cloudinary.uploader.upload(file.path, { folder: 'mealbox' });
+				return result.secure_url;
+			};
+			if (req.files && req.files.boxImage && req.files.boxImage[0]) {
+				boxImageUrl = await cloudinaryUpload(req.files.boxImage[0]);
 			}
+			if (req.files && req.files.actualImage && req.files.actualImage[0]) {
+				actualImageUrl = await cloudinaryUpload(req.files.actualImage[0]);
+			}
+			// Accept vendor from auth
+			const vendor = req.user && req.user._id;
+			// Debug log for received fields
+			console.log('Received fields:', {
+				title,
+				description,
+				minQty,
+				price,
+				prepareOrderDays,
+				sampleAvailable,
+				items,
+				packagingDetails,
+				boxImage: req.files && req.files.boxImage,
+				actualImage: req.files && req.files.actualImage,
+				vendor
+			});
+			// Validate required fields (prepareOrderDays required, deliveryDate removed)
+			if (!title || !minQty || !price || !prepareOrderDays || !vendor || !items || !packagingDetails || !(req.files && req.files.boxImage && req.files.actualImage)) {
+				return res.status(400).json({
+					success: false,
+					message: 'Missing required fields. Make sure you are sending all fields as form-data and images as files.',
+					received: {
+						title,
+						description,
+						minQty,
+						price,
+						prepareOrderDays,
+						sampleAvailable,
+						items,
+						packagingDetails,
+						boxImage: req.files && req.files.boxImage,
+						actualImage: req.files && req.files.actualImage,
+						vendor
+					}
+				});
+			}
+			// Ensure items is always an array of ObjectIds
+			let itemsArr = items;
+			if (typeof itemsArr === 'string') {
+				try {
+					itemsArr = JSON.parse(itemsArr);
+				} catch {
+					itemsArr = itemsArr.split(',').map(i => i.trim());
+				}
+			}
+			if (!Array.isArray(itemsArr)) {
+				itemsArr = [itemsArr];
+			}
+			// Create new MealBox
+			const mealBox = new MealBox({
+				title,
+				description,
+				minQty: Number(minQty),
+				price: Number(price),
+				prepareOrderDays: String(prepareOrderDays),
+				packagingDetails,
+				sampleAvailable: sampleAvailable === 'true' || sampleAvailable === true,
+				boxImage: boxImageUrl,
+				actualImage: actualImageUrl,
+				vendor,
+				items: itemsArr
+			});
+			await mealBox.save();
+			const populatedMealBox = await MealBox.findById(mealBox._id).populate({ path: 'vendor', select: '_id name email mobile' });
+			res.status(201).json({ success: true, message: 'MealBox created', mealBox: populatedMealBox });
+		} catch (error) {
+			res.status(500).json({ success: false, message: error.message });
 		}
-		if (!Array.isArray(itemsArr)) {
-			itemsArr = [itemsArr];
-		}
-		// Create new MealBox
-		const mealBox = new MealBox({
-			title,
-			description,
-			minQty: Number(minQty),
-			price: Number(price),
-			prepareOrderDays: Number(prepareOrderDays),
-			packagingDetails,
-			sampleAvailable: sampleAvailable === 'true' || sampleAvailable === true,
-			boxImage: boxImageUrl,
-			actualImage: actualImageUrl,
-			vendor,
-			items: itemsArr
-		});
-		await mealBox.save();
-		// Populate vendor details for response
-		const populatedMealBox = await MealBox.findById(mealBox._id).populate({ path: 'vendor', select: '_id name email mobile' });
-		res.status(201).json({ success: true, message: 'MealBox created', mealBox: populatedMealBox });
-	} catch (error) {
-		res.status(500).json({ success: false, message: error.message });
-	}
-};
-
-
-// Placeholder implementations for missing handlers
-exports.favoriteMealBox = async (req, res) => {
-	res.status(200).json({ success: true, message: 'favoriteMealBox placeholder' });
-};
-exports.unfavoriteMealBox = async (req, res) => {
-	res.status(200).json({ success: true, message: 'unfavoriteMealBox placeholder' });
-};
-exports.deleteMealBox = async (req, res) => {
-	res.status(200).json({ success: true, message: 'deleteMealBox placeholder' });
-};
-exports.updateMealBox = async (req, res) => {
-	res.status(200).json({ success: true, message: 'updateMealBox placeholder' });
-};
-exports.addCustomItemToMealBox = async (req, res) => {
-	res.status(200).json({ success: true, message: 'addCustomItemToMealBox placeholder' });
-};
-
-// Fix for destructuring import in routes
-module.exports = exports;
- 
