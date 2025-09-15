@@ -37,8 +37,9 @@ exports.confirmMealBoxOrder = async (req, res) => {
 		if (!mealBoxId) {
 			return res.status(400).json({ success: false, message: 'MealBox ID required.' });
 		}
-		// Find the order for this mealbox and vendor with status 'pending'
-		const order = await MealBoxOrder.findOne({ mealBox: mealBoxId, vendor: vendorId, status: 'pending' });
+	// Find the order for this mealbox and vendor with status 'pending' in Order collection
+	const Order = require('../models/Order');
+	const order = await Order.findOne({ mealBox: mealBoxId, vendor: vendorId, status: 'pending', orderType: 'mealbox' });
 		if (!order) {
 			return res.status(404).json({ success: false, message: 'Order not found for this mealbox and vendor.' });
 		}
