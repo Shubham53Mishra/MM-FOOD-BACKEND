@@ -80,6 +80,7 @@ exports.createMealBoxOrder = async (req, res) => {
 };
 // Confirm an order
 exports.confirmOrder = async (req, res) => {
+	console.log('ConfirmOrder received body:', req.body);
     try {
         const orderId = req.params.id;
         const { deliveryTime, deliveryDate } = req.body;
