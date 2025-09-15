@@ -229,14 +229,19 @@ exports.createMealBox = async (req, res) => {
 	try {
 		// Accept form-data fields
 		const { title, description, minQty, price, deliveryDate, prepareOrderDays, packagingDetails, sampleAvailable, items } = req.body;
-		// Accept images from upload.fields
+		// Accept images from upload.fields and upload to Cloudinary
 		let boxImageUrl = null;
 		let actualImageUrl = null;
+		const cloudinaryUpload = async (file) => {
+			if (!file) return null;
+			const result = await cloudinary.uploader.upload(file.path, { folder: 'mealbox' });
+			return result.secure_url;
+		};
 		if (req.files && req.files.boxImage && req.files.boxImage[0]) {
-			boxImageUrl = req.files.boxImage[0].path || req.files.boxImage[0].secure_url;
+			boxImageUrl = await cloudinaryUpload(req.files.boxImage[0]);
 		}
 		if (req.files && req.files.actualImage && req.files.actualImage[0]) {
-			actualImageUrl = req.files.actualImage[0].path || req.files.actualImage[0].secure_url;
+			actualImageUrl = await cloudinaryUpload(req.files.actualImage[0]);
 		}
 		// Accept vendor from auth
 		const vendor = req.user && req.user._id;
