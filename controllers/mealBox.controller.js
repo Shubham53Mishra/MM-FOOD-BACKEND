@@ -34,9 +34,16 @@ exports.confirmMealBoxOrder = async (req, res) => {
 			return res.status(400).json({ success: false, message: 'Order ID required.' });
 		}
 		const MealBoxOrder = require('../models/MealBoxOrder');
-		const order = await MealBoxOrder.findById(orderId);
+		const order = await MealBoxOrder.findById(orderId).populate('mealBox vendor');
 		if (!order) {
 			return res.status(404).json({ success: false, message: 'Order not found.' });
+		}
+		// Defensive: check mealBox and vendor
+		if (!order.mealBox) {
+			return res.status(400).json({ success: false, message: 'MealBox not found in order.' });
+		}
+		if (!order.vendor) {
+			return res.status(400).json({ success: false, message: 'Vendor not found in order.' });
 		}
 		order.status = 'confirmed';
 		await order.save();
@@ -86,7 +93,7 @@ exports.getFavoriteMealBoxes = async (req, res) => {
 
 exports.createMealBoxOrder = async (req, res) => {
 	try {
-		const { mealBoxId, quantity, customerName, customerEmail, customerMobile, deliveryAddress, type, vendorId: vendorIdFromBody } = req.body;
+		const { mealBoxId, quantity, customerName, customerEmail, customerMobile, deliveryAddress, type, vendorId: vendorIdFromBody, status } = req.body;
 		const mealBox = await MealBox.findById(mealBoxId).populate({ path: 'vendor', select: '_id name email mobile' });
 		if (!mealBox) {
 			return res.status(404).json({ success: false, message: 'MealBox not found' });
@@ -110,7 +117,7 @@ exports.createMealBoxOrder = async (req, res) => {
 			vendor: vendorId, // always from mealBox, ignore vendorId from body
 			type: type || 'mealbox',
 			deliveryAddress,
-			status: 'pending'
+			status: status || 'pending'
 		});
 		await mealBoxOrder.save();
 
@@ -125,7 +132,7 @@ exports.createMealBoxOrder = async (req, res) => {
 			vendor: vendorId,
 			type: type || 'mealbox',
 			deliveryAddress,
-			status: 'pending',
+			status: status || 'pending',
 			orderType: 'mealbox'
 		});
 		await order.save();

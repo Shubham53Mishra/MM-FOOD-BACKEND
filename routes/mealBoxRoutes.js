@@ -23,7 +23,7 @@ router.get('/order', getMealBoxOrders);
 router.post('/order', auth, createMealBoxOrder);
 // PUT /api/mealbox/order/:orderId/confirm - confirm a mealbox order
 const { confirmMealBoxOrder } = require('../controllers/mealBox.controller');
-router.put('/order/:orderId/confirm', auth, confirmMealBoxOrder);
+router.put('/order/:orderId/confirm', confirmMealBoxOrder);
 // POST /api/mealbox/:id/favorite - favorite a mealbox
 router.post('/:id/favorite', auth, favoriteMealBox);
 // POST /api/mealbox/:id/unfavorite - unfavorite a mealbox
