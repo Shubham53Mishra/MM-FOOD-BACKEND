@@ -24,8 +24,8 @@ exports.updateMealBoxOrder = async (req, res) => {
 // Create a mealbox order
 exports.createMealBoxOrder = async (req, res) => {
 	try {
-		const { customerName, customerEmail, mealBoxId, quantity, vendorId } = req.body;
-		if (!customerName || !customerEmail || !mealBoxId || !quantity || !vendorId) {
+		const { customerName, customerEmail, customerMobile, items, mealBoxId, quantity, vendorId, deliveryAddress } = req.body;
+		if (!mealBoxId || !quantity || !vendorId || !items) {
 			return res.status(400).json({ message: 'Missing required fields' });
 		}
 		// Find mealbox and vendor
@@ -35,9 +35,12 @@ exports.createMealBoxOrder = async (req, res) => {
 		const order = new (require('../models/Order'))({
 			customerName,
 			customerEmail,
+			customerMobile,
+			items,
 			mealBox: mealBoxId,
 			quantity,
 			vendor: vendorId,
+			deliveryAddress,
 			orderType: 'mealbox',
 			status: 'pending'
 		});

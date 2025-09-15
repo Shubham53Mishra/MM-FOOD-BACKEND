@@ -29,19 +29,15 @@ exports.cancelMealBoxOrder = async (req, res) => {
 // Confirm mealbox order by mealbox_id and vendor
 exports.confirmMealBoxOrder = async (req, res) => {
 	try {
-	const vendorId = req.user && (req.user.id || req.user._id);
 		const mealBoxId = req.params.id;
-		if (!vendorId) {
-			return res.status(401).json({ success: false, message: 'Vendor authentication required.' });
-		}
 		if (!mealBoxId) {
 			return res.status(400).json({ success: false, message: 'MealBox ID required.' });
 		}
-	// Find the order for this mealbox and vendor with status 'pending' in Order collection
-	const Order = require('../models/Order');
-	const order = await Order.findOne({ mealBox: mealBoxId, vendor: vendorId, status: 'pending', orderType: 'mealbox' });
+		// Find the order for this mealbox with status 'pending' in Order collection
+		const Order = require('../models/Order');
+		const order = await Order.findOne({ mealBox: mealBoxId, status: 'pending', orderType: 'mealbox' });
 		if (!order) {
-			return res.status(404).json({ success: false, message: 'Order not found for this mealbox and vendor.' });
+			return res.status(404).json({ success: false, message: 'Order not found for this mealbox.' });
 		}
 		order.status = 'confirmed';
 		await order.save();
@@ -57,18 +53,8 @@ exports.confirmMealBoxOrder = async (req, res) => {
 exports.getMealBoxes = async (req, res) => {
 
 	try {
-		let mealBoxes;
-		if (req.user && req.user._id) {
-			// Vendor token present, show only their mealboxes
-			const vendorId = req.user._id;
-			console.log('GET /api/mealbox for vendorId:', vendorId);
-			mealBoxes = await MealBox.find({ vendor: vendorId }).populate({ path: 'items', model: 'Item' });
-			console.log('Mealboxes found:', mealBoxes.length);
-		} else {
-			// No token, show all mealboxes
-			mealBoxes = await MealBox.find().populate({ path: 'items', model: 'Item' });
-			console.log('GET /api/mealbox for all users. Mealboxes found:', mealBoxes.length);
-		}
+		// Always show all mealboxes, public endpoint
+		const mealBoxes = await MealBox.find().populate({ path: 'items', model: 'Item' });
 		res.status(200).json({ success: true, mealBoxes });
 	} catch (error) {
 		res.status(500).json({ success: false, message: error.message });
