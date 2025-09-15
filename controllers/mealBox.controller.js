@@ -228,7 +228,7 @@ const cloudinary = require('../config/cloudinary');
 exports.createMealBox = async (req, res) => {
 	try {
 		// Accept form-data fields
-		const { title, description, minQty, price, deliveryDate, prepareOrderDays, packagingDetails, sampleAvailable, items } = req.body;
+	const { title, description, minQty, price, prepareOrderDays, packagingDetails, sampleAvailable, items } = req.body;
 		// Accept images from upload.fields and upload to Cloudinary
 		let boxImageUrl = null;
 		let actualImageUrl = null;
@@ -260,8 +260,8 @@ exports.createMealBox = async (req, res) => {
 			actualImage: req.files && req.files.actualImage,
 			vendor
 		});
-		// Validate required fields (allow only prepareOrderDays or deliveryDate)
-		if (!title || !minQty || !price || !prepareOrderDays || !vendor || !items || !packagingDetails || !(req.files && req.files.boxImage && req.files.actualImage)) {
+	// Validate required fields (prepareOrderDays required, deliveryDate removed)
+	if (!title || !minQty || !price || !prepareOrderDays || !vendor || !items || !packagingDetails || !(req.files && req.files.boxImage && req.files.actualImage)) {
 			return res.status(400).json({
 				success: false,
 				message: 'Missing required fields. Make sure you are sending all fields as form-data and images as files.',
@@ -280,18 +280,7 @@ exports.createMealBox = async (req, res) => {
 				}
 			});
 		}
-		// Calculate deliveryDate
-		let deliveryDateIST;
-		if (prepareOrderDays) {
-			const days = Number(prepareOrderDays);
-			const now = new Date();
-			deliveryDateIST = new Date(now.getTime() + days * 24 * 60 * 60 * 1000);
-		} else if (deliveryDate && !deliveryDate.endsWith('+05:30')) {
-			const dateObj = new Date(deliveryDate);
-			deliveryDateIST = new Date(dateObj.getTime() + (5.5 * 60 * 60 * 1000));
-		} else {
-			deliveryDateIST = new Date(deliveryDate);
-		}
+		// No deliveryDate calculation, just use prepareOrderDays
 		// Ensure items is always an array of ObjectIds
 		let itemsArr = items;
 		if (typeof itemsArr === 'string') {
@@ -310,7 +299,7 @@ exports.createMealBox = async (req, res) => {
 			description,
 			minQty: Number(minQty),
 			price: Number(price),
-			deliveryDate: deliveryDateIST,
+			prepareOrderDays: Number(prepareOrderDays),
 			packagingDetails,
 			sampleAvailable: sampleAvailable === 'true' || sampleAvailable === true,
 			boxImage: boxImageUrl,
