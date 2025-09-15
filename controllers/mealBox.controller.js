@@ -261,7 +261,7 @@ exports.createMealBox = async (req, res) => {
 			vendor
 		});
 		// Validate required fields (allow only prepareOrderDays or deliveryDate)
-		if (!title || !minQty || !price || (!prepareOrderDays && !deliveryDate) || !vendor || !items || !packagingDetails || !(req.files && req.files.boxImage && req.files.actualImage)) {
+		if (!title || !minQty || !price || !prepareOrderDays || !vendor || !items || !packagingDetails || !(req.files && req.files.boxImage && req.files.actualImage)) {
 			return res.status(400).json({
 				success: false,
 				message: 'Missing required fields. Make sure you are sending all fields as form-data and images as files.',
@@ -270,7 +270,6 @@ exports.createMealBox = async (req, res) => {
 					description,
 					minQty,
 					price,
-					deliveryDate,
 					prepareOrderDays,
 					sampleAvailable,
 					items,
