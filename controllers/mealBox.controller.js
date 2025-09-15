@@ -45,17 +45,6 @@ exports.confirmMealBoxOrder = async (req, res) => {
 		if (!order) {
 			return res.status(404).json({ success: false, message: 'Order not found.' });
 		}
-		// Accept deliveryDate from body and update order
-		if (req.body.deliveryDate) {
-			let deliveryDateIST;
-			if (!req.body.deliveryDate.endsWith('+05:30')) {
-				const dateObj = new Date(req.body.deliveryDate);
-				deliveryDateIST = new Date(dateObj.getTime() + (5.5 * 60 * 60 * 1000));
-			} else {
-				deliveryDateIST = new Date(req.body.deliveryDate);
-			}
-			order.deliveryDate = deliveryDateIST;
-		}
 		// Only change status if currently pending
 		if (order.status !== 'pending') {
 			return res.status(400).json({ success: false, message: 'Order cannot be confirmed. Status is not pending.' });
@@ -73,7 +62,6 @@ exports.confirmMealBoxOrder = async (req, res) => {
 				vendor: order.vendor,
 				type: order.type,
 				status: order.status,
-				deliveryDate: order.deliveryDate,
 				createdAt: order.createdAt,
 				updatedAt: order.updatedAt
 			}
