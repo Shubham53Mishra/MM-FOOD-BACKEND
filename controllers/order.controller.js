@@ -93,9 +93,20 @@ exports.confirmOrder = async (req, res) => {
 		res.status(200).json({
 			success: true,
 			message: 'Order confirmed',
-			deliveryTime: order.deliveryTime,
-			deliveryDate: order.deliveryDate,
-			status: order.status
+			order: {
+				_id: order._id,
+				customerName: order.customerName,
+				customerEmail: order.customerEmail,
+				customerMobile: order.customerMobile,
+				items: order.items,
+				vendor: order.vendor,
+				status: order.status,
+				orderId: order.orderId,
+				createdAt: order.createdAt,
+				updatedAt: order.updatedAt,
+				deliveryTime: order.deliveryTime,
+				deliveryDate: order.deliveryDate
+			}
 		});
     } catch (error) {
         res.status(500).json({ success: false, message: error.message });
