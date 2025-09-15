@@ -26,24 +26,23 @@ exports.cancelMealBoxOrder = async (req, res) => {
 		res.status(500).json({ success: false, message: error.message });
 	}
 };
-// Confirm mealbox order by mealbox_id and vendor
+// Confirm mealbox order by orderId
 exports.confirmMealBoxOrder = async (req, res) => {
 	try {
-		const mealBoxId = req.params.id;
-		if (!mealBoxId) {
-			return res.status(400).json({ success: false, message: 'MealBox ID required.' });
+		const orderId = req.params.orderId;
+		if (!orderId) {
+			return res.status(400).json({ success: false, message: 'Order ID required.' });
 		}
-		// Find the order for this mealbox with status 'pending' in Order collection
-		const Order = require('../models/Order');
-		const order = await Order.findOne({ mealBox: mealBoxId, status: 'pending', orderType: 'mealbox' });
+		const MealBoxOrder = require('../models/MealBoxOrder');
+		const order = await MealBoxOrder.findById(orderId);
 		if (!order) {
-			return res.status(404).json({ success: false, message: 'Order not found for this mealbox.' });
+			return res.status(404).json({ success: false, message: 'Order not found.' });
 		}
 		order.status = 'confirmed';
 		await order.save();
 		res.status(200).json({
 			success: true,
-			message: 'Order confirmed successfully! Thank you for confirming your mealbox order.',
+			message: 'Order confirmed successfully!',
 			order
 		});
 	} catch (error) {
