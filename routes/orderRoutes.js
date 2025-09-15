@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+const auth = require('../middlewares/auth');
 const Order = require('../models/Order');
 const { getConfirmedOrdersWithTracking } = require('../controllers/order.controller');
 const jwt = require('jsonwebtoken');
@@ -8,7 +9,6 @@ const Category = require('../models/Category');
 const SubCategory = require('../models/SubCategory');
 const User = require('../models/User');
 
-const auth = require('../middlewares/auth');
 // Get total order count
 router.get('/count', async (req, res) => {
   try {
@@ -92,7 +92,6 @@ function authVendor(req, res, next) {
 
 // Vendor views their orders
 // GET /api/orders/tracking - show confirmed orders with delivery info
-const auth = require('../middlewares/auth');
 // GET /api/orders/tracking - show confirmed orders for logged-in user
 router.get('/tracking', auth, getConfirmedOrdersWithTracking);
 router.get('/vendor-orders', authVendor, async (req, res) => {
