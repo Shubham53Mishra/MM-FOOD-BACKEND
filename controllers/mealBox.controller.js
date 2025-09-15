@@ -101,12 +101,16 @@ exports.createMealBox = async (req, res) => {
 			return res.status(400).json({ success: false, message: 'Missing required fields.' });
 		}
 		// Create new MealBox
-		// Convert deliveryDate to IST if not already
+		// Support deliveryDays (number of days from now) or deliveryDate
 		let deliveryDateIST;
-		if (deliveryDate && !deliveryDate.endsWith('+05:30')) {
+		if (req.body.deliveryDays) {
+			// Calculate deliveryDate from days
+			const days = Number(req.body.deliveryDays);
+			const now = new Date();
+			deliveryDateIST = new Date(now.getTime() + days * 24 * 60 * 60 * 1000);
+		} else if (deliveryDate && !deliveryDate.endsWith('+05:30')) {
 			// If not already in IST, convert
 			const dateObj = new Date(deliveryDate);
-			// Add IST offset (5 hours 30 minutes)
 			deliveryDateIST = new Date(dateObj.getTime() + (5.5 * 60 * 60 * 1000));
 		} else {
 			deliveryDateIST = new Date(deliveryDate);
