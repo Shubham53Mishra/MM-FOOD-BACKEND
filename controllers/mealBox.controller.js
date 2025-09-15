@@ -286,7 +286,7 @@ exports.createMealBox = async (req, res) => {
 			description,
 			minQty: Number(minQty),
 			price: Number(price),
-			prepareOrderDays: Number(prepareOrderDays),
+			prepareOrderDays: typeof prepareOrderDays === 'string' ? prepareOrderDays : String(prepareOrderDays),
 			packagingDetails,
 			sampleAvailable: sampleAvailable === 'true' || sampleAvailable === true,
 			boxImage: boxImageUrl,
