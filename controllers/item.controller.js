@@ -63,3 +63,19 @@ exports.createItem = [
 	 	}
 	 }
 ];
+
+exports.getItems = async (req, res) => {
+    try {
+        let items;
+        if (req.user && req.user._id) {
+            // Vendor token present, show only vendor's items
+            items = await Item.find({ vendor: req.user._id });
+        } else {
+            // No vendor token, show all items
+            items = await Item.find();
+        }
+        res.status(200).json({ success: true, items });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
