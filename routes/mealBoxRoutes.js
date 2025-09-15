@@ -1,3 +1,6 @@
+const { cancelMealBoxOrder } = require('../controllers/mealBox.controller');
+const auth = require('../middlewares/auth');
+router.put('/order/:orderId/cancel', auth, cancelMealBoxOrder);
 const express = require('express');
 const router = express.Router();
 const auth = require('../middlewares/auth');

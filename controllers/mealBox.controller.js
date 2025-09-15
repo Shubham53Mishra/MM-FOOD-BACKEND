@@ -128,34 +128,16 @@ exports.createMealBoxOrder = async (req, res) => {
 			customerMobile,
 			mealBox: mealBox._id,
 			quantity,
-			vendor: vendorId, // always from mealBox, ignore vendorId from body
-			type: type || 'mealbox',
 			deliveryAddress,
+			type: type || 'mealbox',
+			vendor: vendorId,
 			status: status || 'pending'
 		});
 		await mealBoxOrder.save();
-
-		// Also create an Order entry for compatibility with confirm endpoint
-		const Order = require('../models/Order');
-		const order = new Order({
-			customerName,
-			customerEmail,
-			customerMobile,
-			mealBox: mealBox._id,
-			quantity,
-			vendor: vendorId,
-			type: type || 'mealbox',
-			deliveryAddress,
-			status: status || 'pending',
-			orderType: 'mealbox'
-		});
-		await order.save();
-
 		res.status(201).json({
 			success: true,
 			message: 'MealBox order created',
-			mealBoxOrder,
-			order
+			mealBoxOrder
 		});
 	} catch (error) {
 		console.error('MealBoxOrder error:', error);
