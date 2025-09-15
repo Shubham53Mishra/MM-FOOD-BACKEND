@@ -49,7 +49,7 @@ function userAuthAndHandler(handler) {
   };
 }
 
-router.put('/confirm-mealbox/:id', vendorAuthAndHandler(confirmMealBoxOrder));
+router.put('/confirm-mealbox/:id', confirmMealBoxOrder);
 router.put('/cancel-mealbox/:id', userAuthAndHandler(cancelMealBoxOrder));
 
 module.exports = router;
