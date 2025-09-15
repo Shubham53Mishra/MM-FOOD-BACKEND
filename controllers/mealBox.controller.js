@@ -319,6 +319,16 @@ exports.addCustomItemToMealBox = async (req, res) => {
 	res.status(200).json({ success: true, message: 'addCustomItemToMealBox placeholder' });
 };
 
+exports.getConfirmedMealBoxOrdersWithTracking = async (req, res) => {
+	try {
+		const MealBoxOrder = require('../models/MealBoxOrder');
+		const orders = await MealBoxOrder.find({ status: 'confirmed' }, 'deliveryTime deliveryDate status').lean();
+		res.status(200).json({ success: true, orders });
+	} catch (error) {
+		res.status(500).json({ success: false, message: error.message });
+	}
+};
+
 // Fix for destructuring import in routes
 module.exports = exports;
 //# sourceMappingURL=mealboxController.js.map
