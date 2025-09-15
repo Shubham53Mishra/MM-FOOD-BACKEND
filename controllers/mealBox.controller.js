@@ -101,11 +101,11 @@ exports.createMealBox = async (req, res) => {
 			return res.status(400).json({ success: false, message: 'Missing required fields.' });
 		}
 		// Create new MealBox
-		// Support deliveryDays (number of days from now) or deliveryDate
+		// Support prepareOrderDays (number of days from now) or deliveryDate
 		let deliveryDateIST;
-		if (req.body.deliveryDays) {
+		if (req.body.prepareOrderDays) {
 			// Calculate deliveryDate from days
-			const days = Number(req.body.deliveryDays);
+			const days = Number(req.body.prepareOrderDays);
 			const now = new Date();
 			deliveryDateIST = new Date(now.getTime() + days * 24 * 60 * 60 * 1000);
 		} else if (deliveryDate && !deliveryDate.endsWith('+05:30')) {
