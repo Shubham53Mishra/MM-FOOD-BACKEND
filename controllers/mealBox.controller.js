@@ -87,14 +87,47 @@ exports.addMultipleCustomItemsToMealBox = async (req, res) => {
 exports.addCustomItemToMealBox = async (req, res) => {
 	res.send('addCustomItemToMealBox');
 };
-exports.updateMealBox = async (req, res) => {
-	res.send('updateMealBox');
-};
-exports.deleteMealBox = async (req, res) => {
-	res.send('deleteMealBox');
-};
-exports.favoriteMealBox = async (req, res) => {
-	res.send('favoriteMealBox');
+exports.createMealBox = async (req, res) => {
+	try {
+		// Accept form-data fields
+		const { title, description, minQty, price, deliveryDate, packagingDetails, sampleAvailable } = req.body;
+		// Accept images from upload.fields
+		const boxImage = req.files && req.files.boxImage ? req.files.boxImage[0].path : undefined;
+		const actualImage = req.files && req.files.actualImage ? req.files.actualImage[0].path : undefined;
+		// Accept vendor from auth
+		const vendor = req.user && req.user._id;
+		// Validate required fields
+		if (!title || !minQty || !price || !deliveryDate || !vendor) {
+			return res.status(400).json({ success: false, message: 'Missing required fields.' });
+		}
+		// Create new MealBox
+		// Convert deliveryDate to IST if not already
+		let deliveryDateIST;
+		if (deliveryDate && !deliveryDate.endsWith('+05:30')) {
+			// If not already in IST, convert
+			const dateObj = new Date(deliveryDate);
+			// Add IST offset (5 hours 30 minutes)
+			deliveryDateIST = new Date(dateObj.getTime() + (5.5 * 60 * 60 * 1000));
+		} else {
+			deliveryDateIST = new Date(deliveryDate);
+		}
+		const mealBox = new MealBox({
+			title,
+			description,
+			minQty: Number(minQty),
+			price: Number(price),
+			deliveryDate: deliveryDateIST,
+			packagingDetails,
+			sampleAvailable: sampleAvailable === 'true' || sampleAvailable === true,
+			boxImage,
+			actualImage,
+			vendor
+		});
+		await mealBox.save();
+		res.status(201).json({ success: true, message: 'MealBox created', mealBox });
+	} catch (error) {
+		res.status(500).json({ success: false, message: error.message });
+	}
 };
 
 exports.unfavoriteMealBox = async (req, res) => {
