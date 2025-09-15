@@ -126,16 +126,20 @@ exports.confirmOrder = async (req, res) => {
 };
 // Get confirmed orders with tracking information
 exports.getConfirmedOrdersWithTracking = async (req, res) => {
-    try {
-        const Order = require('../models/Order');
-		const orders = await Order.find({ status: 'confirmed' }).lean();
+	try {
+		const Order = require('../models/Order');
+		let query = { status: 'confirmed' };
+		if (req.user && req.user.email) {
+			query.customerEmail = req.user.email;
+		}
+		const orders = await Order.find(query).lean();
 		const result = orders.map(order => ({
 			status: order.status,
 			deliveryTime: order.deliveryTime || null,
 			deliveryDate: order.deliveryDate || null
 		}));
 		res.status(200).json({ success: true, orders: result });
-    } catch (error) {
-        res.status(500).json({ success: false, message: error.message });
-    }
+	} catch (error) {
+		res.status(500).json({ success: false, message: error.message });
+	}
 };

@@ -92,7 +92,9 @@ function authVendor(req, res, next) {
 
 // Vendor views their orders
 // GET /api/orders/tracking - show confirmed orders with delivery info
-router.get('/tracking', getConfirmedOrdersWithTracking);
+const auth = require('../middlewares/auth');
+// GET /api/orders/tracking - show confirmed orders for logged-in user
+router.get('/tracking', auth, getConfirmedOrdersWithTracking);
 router.get('/vendor-orders', authVendor, async (req, res) => {
   try {
     const orders = await Order.find({ vendor: req.vendorId }).populate('items.category items.subCategory');
