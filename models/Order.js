@@ -15,7 +15,8 @@ const orderSchema = new mongoose.Schema({
       discountedPrice: { type: Number }
     }
   ],
-  mealBox: { type: mongoose.Schema.Types.ObjectId, ref: 'MealBox' },
+    deliveryTime: { type: String, default: null },
+    deliveryDate: { type: String, default: null },
   vendor: { type: mongoose.Schema.Types.ObjectId, ref: 'Vendor' },
   type: { type: String }, // e.g. 'mealbox'
   cancelReason: { type: String },
