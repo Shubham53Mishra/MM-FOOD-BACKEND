@@ -184,13 +184,16 @@ Example workflow:
 // Method: GET
 // URL: http://localhost:5000/api/categories/all
 // Only main categories
-router.get('/all', auth, async (req, res) => {
+router.get('/all', async (req, res) => {
   try {
-    const vendorId = req.user && req.user.id ? req.user.id : null;
-    if (!vendorId) {
-      return res.status(401).json({ message: 'Vendor authentication required' });
+    let categories;
+    if (req.user && req.user.id) {
+      // Vendor token present, show only vendor's categories
+      categories = await Category.find({ vendor: req.user.id }, '_id name');
+    } else {
+      // No vendor token, show all categories
+      categories = await Category.find({}, '_id name');
     }
-    const categories = await Category.find({ vendor: vendorId }, '_id name');
     res.json({ categories });
   } catch (err) {
     res.status(500).json({ message: 'Error fetching categories', error: err.message });
@@ -217,9 +220,10 @@ router.post('/add', auth, async (req, res) => {
   try {
     const newCategory = new Category({ name, vendor: vendorId, minQty: minQty !== undefined ? minQty : 1 });
     await newCategory.save();
-  res.status(201).json({ message: "Category added", category: newCategory });
+    res.status(201).json({ message: "Category added", category: newCategory });
   } catch (err) {
-    res.status(500).json({ message: "Error saving category", error: err.message });
+    console.error('Error saving category:', err);
+    res.status(500).json({ message: "Error saving category", error: err.message, stack: err.stack });
   }
 });
 
