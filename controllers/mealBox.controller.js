@@ -44,7 +44,11 @@ exports.confirmMealBoxOrder = async (req, res) => {
 		}
 		order.status = 'confirmed';
 		await order.save();
-		res.status(200).json({ success: true, message: 'Order confirmed.', order });
+		res.status(200).json({
+			success: true,
+			message: 'Order confirmed successfully! Thank you for confirming your mealbox order.',
+			order
+		});
 	} catch (error) {
 		res.status(500).json({ success: false, message: error.message });
 	}
