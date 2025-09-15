@@ -29,7 +29,7 @@ exports.cancelMealBoxOrder = async (req, res) => {
 // Confirm mealbox order by mealbox_id and vendor
 exports.confirmMealBoxOrder = async (req, res) => {
 	try {
-		const vendorId = req.user && req.user._id;
+	const vendorId = req.user && (req.user.id || req.user._id);
 		const mealBoxId = req.params.id;
 		if (!vendorId) {
 			return res.status(401).json({ success: false, message: 'Vendor authentication required.' });
