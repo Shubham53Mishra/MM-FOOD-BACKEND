@@ -25,6 +25,7 @@ module.exports = async function (req, res, next) {
 			console.log('Authenticated as user:', user.email);
 			req.user = {
 				_id: user._id,
+				id: String(user._id),
 				name: user.fullName,
 				email: user.email,
 				mobile: user.mobile
@@ -38,6 +39,7 @@ module.exports = async function (req, res, next) {
 			console.log('Authenticated as vendor:', vendor.email);
 			req.user = {
 				_id: vendor._id,
+				id: String(vendor._id),
 				name: vendor.name,
 				email: vendor.email,
 				mobile: vendor.mobile,
