@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const Order = require('../models/Order');
+const { getConfirmedOrdersWithTracking } = require('../controllers/order.controller');
 const jwt = require('jsonwebtoken');
 const Vendor = require('../models/Vendor');
 const Category = require('../models/Category');
@@ -90,6 +91,8 @@ function authVendor(req, res, next) {
 }
 
 // Vendor views their orders
+// GET /api/orders/tracking - show confirmed orders with delivery info
+router.get('/tracking', getConfirmedOrdersWithTracking);
 router.get('/vendor-orders', authVendor, async (req, res) => {
   try {
     const orders = await Order.find({ vendor: req.vendorId }).populate('items.category items.subCategory');
