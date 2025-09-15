@@ -96,8 +96,8 @@ exports.confirmOrder = async (req, res) => {
             return res.status(400).json({ success: false, message: 'Order cannot be confirmed. Status is not pending.' });
         }
 		// Set delivery time and date (Indian time)
-		order.deliveryTime = deliveryTime !== undefined ? String(deliveryTime) : (order.deliveryTime || req.body.deliveryTime || null);
-		order.deliveryDate = deliveryDate !== undefined ? String(deliveryDate) : (order.deliveryDate || req.body.deliveryDate || null);
+	if (req.body.deliveryTime !== undefined) order.deliveryTime = String(req.body.deliveryTime);
+	if (req.body.deliveryDate !== undefined) order.deliveryDate = String(req.body.deliveryDate);
 		order.markModified('deliveryTime');
 		order.markModified('deliveryDate');
 		order.status = 'confirmed';

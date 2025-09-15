@@ -169,9 +169,11 @@ router.put('/confirm/:orderId', authVendor, async (req, res) => {
     if (!order) {
       return res.status(404).json({ message: "Order not found or not authorized" });
     }
-    order.status = 'confirmed';
-    await order.save();
-    res.json({ message: "Order confirmed", order });
+  order.status = 'confirmed';
+  if (req.body.deliveryTime !== undefined) order.deliveryTime = String(req.body.deliveryTime);
+  if (req.body.deliveryDate !== undefined) order.deliveryDate = String(req.body.deliveryDate);
+  await order.save();
+  res.json({ message: "Order confirmed", order });
   } catch (err) {
     res.status(500).json({ message: "Error confirming order", error: err.message });
   }
