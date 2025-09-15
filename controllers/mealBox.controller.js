@@ -1,22 +1,28 @@
 // Cancel mealbox order by mealbox_id and vendor, with reason
 exports.cancelMealBoxOrder = async (req, res) => {
 	try {
+		const orderId = req.params.id;
 		const vendorId = req.user && req.user._id;
-		const mealBoxId = req.params.id;
 		const { reason } = req.body;
+		if (!orderId) {
+			return res.status(400).json({ success: false, message: 'Order ID required.' });
+		}
 		if (!vendorId) {
 			return res.status(401).json({ success: false, message: 'Vendor authentication required.' });
-		}
-		if (!mealBoxId) {
-			return res.status(400).json({ success: false, message: 'MealBox ID required.' });
 		}
 		if (!reason) {
 			return res.status(400).json({ success: false, message: 'Cancel reason required.' });
 		}
-		// Find the order for this mealbox and vendor with status 'pending' or 'confirmed'
-		const order = await MealBoxOrder.findOne({ mealBox: mealBoxId, vendor: vendorId, status: { $in: ['pending', 'confirmed'] } });
+		const MealBoxOrder = require('../models/MealBoxOrder');
+		const order = await MealBoxOrder.findById(orderId);
 		if (!order) {
-			return res.status(404).json({ success: false, message: 'Order not found for this mealbox and vendor.' });
+			return res.status(404).json({ success: false, message: 'Order not found.' });
+		}
+		if (String(order.vendor) !== String(vendorId)) {
+			return res.status(403).json({ success: false, message: 'Unauthorized: You can only cancel your own mealbox orders.' });
+		}
+		if (!['pending', 'confirmed'].includes(order.status)) {
+			return res.status(400).json({ success: false, message: 'Order cannot be cancelled. Status must be pending or confirmed.' });
 		}
 		order.status = 'cancelled';
 		order.cancelReason = reason;
