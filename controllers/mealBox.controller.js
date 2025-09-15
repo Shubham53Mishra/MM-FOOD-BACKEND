@@ -233,20 +233,7 @@ exports.createMealBox = async (req, res) => {
 		}
 		// Accept vendor from auth
 		const vendor = req.user && req.user._id;
-		// Debug log for received fields
-		console.log('Received fields:', {
-			title,
-			description,
-			minQty,
-			price,
-			prepareOrderDays,
-			sampleAvailable,
-			items,
-			packagingDetails,
-			boxImage: req.files && req.files.boxImage,
-			actualImage: req.files && req.files.actualImage,
-			vendor
-		});
+		// ...existing code...
 	// Validate required fields (prepareOrderDays required, deliveryDate removed)
 	if (!title || !minQty || !price || !prepareOrderDays || !vendor || !items || !packagingDetails || !(req.files && req.files.boxImage && req.files.actualImage)) {
 			return res.status(400).json({
