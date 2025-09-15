@@ -245,8 +245,10 @@ exports.createMealBox = async (req, res) => {
 		}
 		// Accept vendor from auth
 		const vendor = req.user && req.user._id;
-		// Validate required fields
-		if (!title || !minQty || !price || !(deliveryDate || prepareOrderDays) || !vendor) {
+		// Debug log for received fields
+		console.log('Received fields:', { title, minQty, price, deliveryDate, prepareOrderDays, vendor });
+		// Validate required fields (allow only prepareOrderDays or deliveryDate)
+		if (!title || !minQty || !price || (!prepareOrderDays && !deliveryDate) || !vendor) {
 			return res.status(400).json({ success: false, message: 'Missing required fields.' });
 		}
 		// Calculate deliveryDate
