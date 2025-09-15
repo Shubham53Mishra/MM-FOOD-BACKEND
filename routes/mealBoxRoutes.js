@@ -1,4 +1,3 @@
-
 const express = require('express');
 const router = express.Router();
 const auth = require('../middlewares/auth');
@@ -19,7 +18,8 @@ const {
 	createMealBox,
 	addMultipleCustomItemsToMealBox,
 	addCustomItemToMealBox,
-	getMealBoxes
+	getMealBoxes,
+	getConfirmedMealBoxOrdersWithTracking
 } = mealBoxController;
 const { uploadCustomItemImage } = require('../controllers/upload.controller');
 
@@ -52,5 +52,7 @@ router.post('/:mealBoxId/add-item', addCustomItemToMealBox);
 router.post('/', auth, upload.fields([{ name: 'boxImage' }, { name: 'actualImage' }]), createMealBox);
 // GET /api/mealbox - get all mealboxes (public or vendor filtered)
 router.get('/', getMealBoxes);
+// GET /api/mealbox/tracking - track confirmed mealbox orders
+router.get('/tracking', getConfirmedMealBoxOrdersWithTracking);
 
 module.exports = router;

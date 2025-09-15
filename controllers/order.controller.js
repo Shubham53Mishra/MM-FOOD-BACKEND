@@ -50,3 +50,39 @@ exports.createMealBoxOrder = async (req, res) => {
 		res.status(500).json({ message: 'Error creating mealbox order', error: err.message });
 	}
 };
+// Confirm an order
+exports.confirmOrder = async (req, res) => {
+    try {
+        const orderId = req.params.id;
+        const { deliveryTime, deliveryDate } = req.body;
+        if (!orderId) {
+            return res.status(400).json({ success: false, message: 'Order ID required.' });
+        }
+        const Order = require('../models/Order');
+        const order = await Order.findById(orderId);
+        if (!order) {
+            return res.status(404).json({ success: false, message: 'Order not found.' });
+        }
+        if (order.status !== 'pending') {
+            return res.status(400).json({ success: false, message: 'Order cannot be confirmed. Status is not pending.' });
+        }
+        // Set delivery time and date (Indian time)
+        if (deliveryTime) order.deliveryTime = deliveryTime;
+        if (deliveryDate) order.deliveryDate = deliveryDate;
+        order.status = 'confirmed';
+        await order.save();
+        res.status(200).json({ success: true, message: 'Order confirmed', order });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+// Get confirmed orders with tracking information
+exports.getConfirmedOrdersWithTracking = async (req, res) => {
+    try {
+        const Order = require('../models/Order');
+        const orders = await Order.find({ status: 'confirmed' }, 'deliveryTime deliveryDate status').lean();
+        res.status(200).json({ success: true, orders });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+};

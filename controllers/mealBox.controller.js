@@ -233,9 +233,8 @@ exports.createMealBox = async (req, res) => {
 		}
 		// Accept vendor from auth
 		const vendor = req.user && req.user._id;
-		// ...existing code...
-	// Validate required fields (prepareOrderDays required, deliveryDate removed)
-	if (!title || !minQty || !price || !prepareOrderDays || !vendor || !items || !packagingDetails || !(req.files && req.files.boxImage && req.files.actualImage)) {
+		// Validate required fields (prepareOrderDays required, deliveryDate removed)
+		if (!title || !minQty || !price || !prepareOrderDays || !vendor || !items || !packagingDetails || !(req.files && req.files.boxImage && req.files.actualImage)) {
 			return res.status(400).json({
 				success: false,
 				message: 'Missing required fields. Make sure you are sending all fields as form-data and images as files.',
@@ -322,3 +321,4 @@ exports.addCustomItemToMealBox = async (req, res) => {
 
 // Fix for destructuring import in routes
 module.exports = exports;
+//# sourceMappingURL=mealboxController.js.map

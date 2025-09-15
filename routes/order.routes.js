@@ -3,7 +3,9 @@ const router = express.Router();
 const {
   getMealBoxOrders,
   updateMealBoxOrder,
-  createMealBoxOrder
+  createMealBoxOrder,
+  getConfirmedOrdersWithTracking,
+  confirmOrder
 } = require('../controllers/order.controller');
 
 // GET /api/orders/mealbox - get all mealbox orders
@@ -51,5 +53,7 @@ function userAuthAndHandler(handler) {
 
 router.put('/confirm-mealbox/:id', confirmMealBoxOrder);
 router.put('/cancel-mealbox/:id', userAuthAndHandler(cancelMealBoxOrder));
+router.get('/tracking', getConfirmedOrdersWithTracking);
+router.put('/confirm/:id', confirmOrder);
 
 module.exports = router;
