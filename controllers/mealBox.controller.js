@@ -239,7 +239,6 @@ exports.createMealBox = async (req, res) => {
 			description,
 			minQty,
 			price,
-			deliveryDate,
 			prepareOrderDays,
 			sampleAvailable,
 			items,
