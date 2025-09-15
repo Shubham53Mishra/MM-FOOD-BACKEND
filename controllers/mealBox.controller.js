@@ -40,10 +40,10 @@ exports.confirmMealBoxOrder = async (req, res) => {
 		}
 		// Defensive: log missing fields but still allow confirmation
 		if (!order.mealBox) {
-			console.warn('MealBox not found in order:', order._id);
+			console.warn('MealBox not found in order:', order ? order._id : '(order missing)');
 		}
 		if (!order.vendor) {
-			console.warn('Vendor not found in order:', order._id);
+			console.warn('Vendor not found in order:', order ? order._id : '(order missing)');
 		}
 		order.status = 'confirmed';
 		await order.save();
