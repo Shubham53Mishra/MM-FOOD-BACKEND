@@ -34,27 +34,34 @@ exports.confirmMealBoxOrder = async (req, res) => {
 			return res.status(400).json({ success: false, message: 'Order ID required.' });
 		}
 		const MealBoxOrder = require('../models/MealBoxOrder');
-		const order = await MealBoxOrder.findById(orderId).populate('mealBox vendor');
+		// Find order by ID
+		const order = await MealBoxOrder.findById(orderId);
 		if (!order) {
 			return res.status(404).json({ success: false, message: 'Order not found.' });
 		}
-		// Defensive: log missing fields but still allow confirmation
-		if (!order.mealBox) {
-			console.warn('MealBox not found in order:', order ? order._id : '(order missing)');
+		// Only change status if currently pending
+		if (order.status !== 'pending') {
+			return res.status(400).json({ success: false, message: 'Order cannot be confirmed. Status is not pending.' });
 		}
-		if (!order.vendor) {
-			console.warn('Vendor not found in order:', order ? order._id : '(order missing)');
-		}
+		// Change status
 		order.status = 'confirmed';
 		await order.save();
 		res.status(200).json({
 			success: true,
 			message: 'Order confirmed successfully!',
-			order
+			order: {
+				_id: order._id,
+				mealBox: order.mealBox,
+				quantity: order.quantity,
+				vendor: order.vendor,
+				type: order.type,
+				status: order.status,
+				createdAt: order.createdAt,
+				updatedAt: order.updatedAt
+			}
 		});
 	} catch (error) {
-		console.error('ConfirmMealBoxOrder error:', error);
-		res.status(500).json({ success: false, message: error.message, stack: error.stack });
+		res.status(500).json({ success: false, message: error.message });
 	}
 };
 exports.getMealBoxes = async (req, res) => {
@@ -200,21 +207,27 @@ exports.getMyMealBoxes = async (req, res) => {
 // Confirm a mealbox order (vendor only)
 exports.confirmMealBoxOrder = async (req, res) => {
 	try {
-		const orderId = req.params.id;
-		const vendorId = req.user._id;
-		// Find the order and ensure it belongs to this vendor
+		const orderId = req.params.orderId;
+		const vendorId = req.user && req.user._id;
+		if (!orderId) {
+			return res.status(400).json({ success: false, message: 'Order ID required.' });
+		}
+		if (!vendorId) {
+			return res.status(401).json({ success: false, message: 'Vendor authentication required.' });
+		}
 		const order = await MealBoxOrder.findById(orderId).populate('mealBox vendor');
 		if (!order) {
 			return res.status(404).json({ success: false, message: 'Order not found' });
 		}
-		// Check vendor matches
 		const orderVendorId = String(order.vendor && order.vendor._id ? order.vendor._id : order.vendor);
 		const mealBoxVendorId = String(order.mealBox && order.mealBox.vendor ? order.mealBox.vendor : '');
 		const tokenVendorId = String(vendorId);
 		if (orderVendorId !== tokenVendorId || mealBoxVendorId !== tokenVendorId) {
 			return res.status(403).json({ success: false, message: 'Unauthorized: You can only confirm your own mealbox orders.' });
 		}
-		// Update status to confirmed
+		if (order.status !== 'pending') {
+			return res.status(400).json({ success: false, message: 'Order cannot be confirmed. Status is not pending.' });
+		}
 		order.status = 'confirmed';
 		await order.save();
 		res.status(200).json({ success: true, message: 'Order confirmed', order });

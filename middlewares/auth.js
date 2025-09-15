@@ -24,11 +24,12 @@ module.exports = async function (req, res, next) {
 		if (user) {
 			console.log('Authenticated as user:', user.email);
 			req.user = {
-				id: user._id,
+				_id: user._id,
 				name: user.fullName,
 				email: user.email,
 				mobile: user.mobile
 			};
+			console.log('req.user:', req.user);
 			return next();
 		}
 		// If not user, try vendor
@@ -36,12 +37,13 @@ module.exports = async function (req, res, next) {
 		if (vendor) {
 			console.log('Authenticated as vendor:', vendor.email);
 			req.user = {
-				id: vendor._id,
+				_id: vendor._id,
 				name: vendor.name,
 				email: vendor.email,
 				mobile: vendor.mobile,
 				isVendor: true
 			};
+			console.log('req.user:', req.user);
 			return next();
 		}
 		return res.status(401).json({ message: 'User not found' });
