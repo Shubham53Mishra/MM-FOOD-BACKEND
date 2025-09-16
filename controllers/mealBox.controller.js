@@ -364,9 +364,10 @@ exports.deleteMealBox = async (req, res) => {
             return res.status(404).json({ success: false, message: 'MealBox not found.' });
         }
         res.status(200).json({ success: true, message: 'MealBox deleted successfully.', mealBox: deleted });
-    } catch (error) {
-        res.status(500).json({ success: false, message: error.message });
-    }
+	} catch (error) {
+		console.error('confirmMealBoxOrder error:', error);
+		res.status(500).json({ success: false, message: error.message });
+	}
 };
 exports.updateMealBox = async (req, res) => {
 	res.status(200).json({ success: true, message: 'updateMealBox placeholder' });
