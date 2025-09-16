@@ -5,7 +5,7 @@ const mealBoxSchema = new mongoose.Schema({
 	description: String,
 	minQty: Number,
 	price: Number,
-	prepareOrderDays: { type: Number, required: true },
+	prepareOrderDays: { type: String, required: true },
 	sampleAvailable: { type: Boolean, default: false },
 	items: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Item' }],
 	packagingDetails: String,
