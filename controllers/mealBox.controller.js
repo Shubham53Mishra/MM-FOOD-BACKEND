@@ -61,9 +61,7 @@ exports.cancelMealBoxOrder = async (req, res) => {
 			return res.status(400).json({ success: false, message: 'Cancel reason required.' });
 		}
 		const cancelReason = reason;
-		if (String(order.vendor) !== String(vendorId)) {
-			return res.status(403).json({ success: false, message: 'Unauthorized: You can only cancel your own mealbox orders.' });
-		}
+		// Vendor check removed: any authenticated user can cancel
 		if (!['pending', 'confirmed'].includes(order.status)) {
 			return res.status(400).json({ success: false, message: 'Order cannot be cancelled. Status must be pending or confirmed.' });
 		}
