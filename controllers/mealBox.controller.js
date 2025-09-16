@@ -41,7 +41,12 @@ exports.markMealBoxOrderDelivered = async (req, res) => {
 };
 // Cancel mealbox order by mealbox_id and vendor, with reason
 exports.cancelMealBoxOrder = async (req, res) => {
-	try {
+		console.log('cancelMealBoxOrder called', {
+			params: req.params,
+			body: req.body,
+			user: req.user
+		});
+		try {
 	const orderId = req.params.orderId;
 		const vendorId = req.user && req.user._id;
 		const { reason } = req.body;
