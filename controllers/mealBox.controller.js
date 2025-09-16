@@ -89,13 +89,13 @@ exports.confirmMealBoxOrder = async (req, res) => {
 		if (!order) {
 			return res.status(404).json({ success: false, message: 'Order not found' });
 		}
-		// Check vendor ownership
+		// Check vendor ownership: allow if vendor matches either order.vendor or mealBox.vendor
 		const orderVendorId = String(order.vendor);
 		// To check mealBox.vendor, need to fetch mealBox
 		const mealBox = await MealBox.findById(order.mealBox);
 		const mealBoxVendorId = mealBox ? String(mealBox.vendor) : '';
 		const tokenVendorId = String(vendorId);
-		if (orderVendorId !== tokenVendorId || mealBoxVendorId !== tokenVendorId) {
+		if (orderVendorId !== tokenVendorId && mealBoxVendorId !== tokenVendorId) {
 			return res.status(403).json({ success: false, message: 'Unauthorized: You can only confirm your own mealbox orders.' });
 		}
 		// Allow updating deliveryTime and deliveryDate even if already confirmed
