@@ -46,37 +46,39 @@ exports.cancelMealBoxOrder = async (req, res) => {
 			body: req.body,
 			user: req.user
 		});
+		// Helper to send detailed error
+		function sendError(status, message, extra = {}) {
+			console.log('CancelMealBoxOrder Error:', message, extra);
+			return res.status(status).json({ success: false, message, ...extra });
+		}
 		try {
-	const orderId = req.params.orderId;
-	const vendorId = req.user && req.user._id;
-	const { reason } = req.body || {};
-		if (!orderId) {
-			return res.status(400).json({ success: false, message: 'Order ID required.' });
+			const orderId = req.params.orderId;
+			const vendorId = req.user && req.user._id;
+			const { reason } = req.body || {};
+			if (!orderId) {
+				return sendError(400, 'Order ID required.', { params: req.params });
+			}
+			if (!vendorId) {
+				return sendError(401, 'Vendor authentication required.', { user: req.user });
+			}
+			const MealBoxOrder = require('../models/MealBoxOrder');
+			const order = await MealBoxOrder.findById(orderId);
+			if (!order) {
+				return sendError(404, 'Order not found.', { orderId });
+			}
+			if (!reason) {
+				return sendError(400, 'Cancel reason required.', { body: req.body });
+			}
+			if (!['pending', 'confirmed'].includes(order.status)) {
+				return sendError(400, 'Order cannot be cancelled. Status must be pending or confirmed.', { status: order.status });
+			}
+			order.status = 'cancelled';
+			order.cancelReason = reason;
+			await order.save();
+			res.status(200).json({ success: true, message: 'Order cancelled.', order });
+		} catch (error) {
+			sendError(500, error.message, { error });
 		}
-		if (!vendorId) {
-			return res.status(401).json({ success: false, message: 'Vendor authentication required.' });
-		}
-		const MealBoxOrder = require('../models/MealBoxOrder');
-		const order = await MealBoxOrder.findById(orderId);
-		if (!order) {
-			return res.status(404).json({ success: false, message: 'Order not found.' });
-		}
-		// Reason is required
-		if (!reason) {
-			return res.status(400).json({ success: false, message: 'Cancel reason required.' });
-		}
-		const cancelReason = reason;
-		// Vendor check removed: any authenticated user can cancel
-		if (!['pending', 'confirmed'].includes(order.status)) {
-			return res.status(400).json({ success: false, message: 'Order cannot be cancelled. Status must be pending or confirmed.' });
-		}
-		order.status = 'cancelled';
-		order.cancelReason = cancelReason;
-		await order.save();
-		res.status(200).json({ success: true, message: 'Order cancelled.', order });
-	} catch (error) {
-		res.status(500).json({ success: false, message: error.message });
-	}
 };
 // Confirm a mealbox order (vendor only, single definition, sets deliveryTime and deliveryDate)
 exports.confirmMealBoxOrder = async (req, res) => {
