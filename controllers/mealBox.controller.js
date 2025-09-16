@@ -48,8 +48,8 @@ exports.cancelMealBoxOrder = async (req, res) => {
 		});
 		try {
 	const orderId = req.params.orderId;
-		const vendorId = req.user && req.user._id;
-		const { reason } = req.body;
+	const vendorId = req.user && req.user._id;
+	const { reason } = req.body || {};
 		if (!orderId) {
 			return res.status(400).json({ success: false, message: 'Order ID required.' });
 		}
