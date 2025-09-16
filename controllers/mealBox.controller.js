@@ -51,14 +51,16 @@ exports.cancelMealBoxOrder = async (req, res) => {
 		if (!vendorId) {
 			return res.status(401).json({ success: false, message: 'Vendor authentication required.' });
 		}
-		if (!reason) {
-			return res.status(400).json({ success: false, message: 'Cancel reason required.' });
-		}
 		const MealBoxOrder = require('../models/MealBoxOrder');
 		const order = await MealBoxOrder.findById(orderId);
 		if (!order) {
 			return res.status(404).json({ success: false, message: 'Order not found.' });
 		}
+		// Reason is required
+		if (!reason) {
+			return res.status(400).json({ success: false, message: 'Cancel reason required.' });
+		}
+		const cancelReason = reason;
 		if (String(order.vendor) !== String(vendorId)) {
 			return res.status(403).json({ success: false, message: 'Unauthorized: You can only cancel your own mealbox orders.' });
 		}
@@ -66,7 +68,7 @@ exports.cancelMealBoxOrder = async (req, res) => {
 			return res.status(400).json({ success: false, message: 'Order cannot be cancelled. Status must be pending or confirmed.' });
 		}
 		order.status = 'cancelled';
-		order.cancelReason = reason;
+		order.cancelReason = cancelReason;
 		await order.save();
 		res.status(200).json({ success: true, message: 'Order cancelled.', order });
 	} catch (error) {
