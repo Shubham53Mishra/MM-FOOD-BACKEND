@@ -34,6 +34,9 @@ exports.cancelMealBoxOrder = async (req, res) => {
 };
 // Confirm mealbox order by orderId
 exports.confirmMealBoxOrder = async (req, res) => {
+	console.log('--- DEBUG: confirmMealBoxOrder ---');
+	console.log('Headers:', req.headers);
+	console.log('Body:', req.body);
 	console.log('ConfirmMealBoxOrder received body:', req.body);
 	try {
 		const orderId = req.params.orderId;
