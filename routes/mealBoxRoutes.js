@@ -55,7 +55,7 @@ router.post('/:mealBoxId/add-item', addCustomItemToMealBox);
 router.post('/', auth, upload.fields([{ name: 'boxImage' }, { name: 'actualImage' }]), createMealBox);
 // GET /api/mealbox - get all mealboxes (public or vendor filtered)
 router.get('/', getMealBoxes);
-// GET /api/mealbox/tracking - track confirmed mealbox orders
-router.get('/tracking', getConfirmedMealBoxOrdersWithTracking);
+// GET /api/mealbox/tracking - track confirmed mealbox orders for logged-in vendor
+router.get('/tracking', auth, getConfirmedMealBoxOrdersWithTracking);
 
 module.exports = router;

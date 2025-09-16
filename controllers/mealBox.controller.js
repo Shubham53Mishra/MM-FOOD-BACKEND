@@ -420,7 +420,12 @@ exports.addCustomItemToMealBox = async (req, res) => {
 exports.getConfirmedMealBoxOrdersWithTracking = async (req, res) => {
 	try {
 		const MealBoxOrder = require('../models/MealBoxOrder');
-		const orders = await MealBoxOrder.find({ status: 'confirmed' }, 'deliveryTime deliveryDate status').lean();
+		let filter = { status: 'confirmed' };
+		// If user is logged in, filter by customerEmail
+		if (req.user && req.user.email) {
+			filter.customerEmail = req.user.email;
+		}
+		const orders = await MealBoxOrder.find(filter, 'deliveryTime deliveryDate status').lean();
 		res.status(200).json({ success: true, orders });
 	} catch (error) {
 		res.status(500).json({ success: false, message: error.message });
