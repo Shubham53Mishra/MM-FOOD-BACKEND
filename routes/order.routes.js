@@ -1,5 +1,6 @@
 // Mark order as delivered (tracking update)
-router.put('/tracking/:id/delivered', requireVendor, require('../controllers/order.controller').markOrderDelivered);
+const { markOrderDelivered } = require('../controllers/order.controller');
+router.put('/tracking/:id/delivered', markOrderDelivered);
 const express = require('express');
 const router = express.Router();
 const {

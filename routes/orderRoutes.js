@@ -1,13 +1,16 @@
 const express = require('express');
 const router = express.Router();
+const { getConfirmedOrdersWithTracking, markOrderDelivered } = require('../controllers/order.controller');
+// Mark order as delivered (tracking update)
+router.put('/tracking/:id/delivered', markOrderDelivered);
 const auth = require('../middlewares/auth');
 const Order = require('../models/Order');
-const { getConfirmedOrdersWithTracking } = require('../controllers/order.controller');
 const jwt = require('jsonwebtoken');
 const Vendor = require('../models/Vendor');
 const Category = require('../models/Category');
 const SubCategory = require('../models/SubCategory');
 const User = require('../models/User');
+// ...existing code...
 
 // Get total order count
 router.get('/count', async (req, res) => {
