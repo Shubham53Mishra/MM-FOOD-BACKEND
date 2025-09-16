@@ -37,6 +37,51 @@ exports.confirmMealBoxOrder = async (req, res) => {
 	console.log('--- DEBUG: confirmMealBoxOrder ---');
 	console.log('Headers:', req.headers);
 	console.log('Body:', req.body);
+	// Forcefully set deliveryTime and deliveryDate
+	console.log('ConfirmMealBoxOrder received body:', req.body);
+	try {
+		const orderId = req.params.orderId;
+		const { deliveryTime, deliveryDate } = req.body;
+		if (!orderId) {
+			return res.status(400).json({ success: false, message: 'Order ID required.' });
+		}
+		const MealBoxOrder = require('../models/MealBoxOrder');
+		const order = await MealBoxOrder.findById(orderId);
+		if (!order) {
+			return res.status(404).json({ success: false, message: 'Order not found.' });
+		}
+		if (order.status !== 'pending') {
+			return res.status(400).json({ success: false, message: 'Order cannot be confirmed. Status is not pending.' });
+		}
+		// Set delivery time and date
+		if (req.body.deliveryTime !== undefined) order.deliveryTime = String(req.body.deliveryTime);
+		if (req.body.deliveryDate !== undefined) order.deliveryDate = String(req.body.deliveryDate);
+		order.markModified('deliveryTime');
+		order.markModified('deliveryDate');
+		order.status = 'confirmed';
+		await order.save();
+		res.status(200).json({
+			success: true,
+			message: 'Order confirmed',
+			order: {
+				_id: order._id,
+				customerName: order.customerName,
+				customerEmail: order.customerEmail,
+				customerMobile: order.customerMobile,
+				mealBox: order.mealBox,
+				quantity: order.quantity,
+				vendor: order.vendor,
+				type: order.type,
+				status: order.status,
+				deliveryTime: order.deliveryTime,
+				deliveryDate: order.deliveryDate,
+				createdAt: order.createdAt,
+				updatedAt: order.updatedAt
+			}
+		});
+	} catch (error) {
+		res.status(500).json({ success: false, message: error.message });
+	}
 	console.log('ConfirmMealBoxOrder received body:', req.body);
 	try {
 		const orderId = req.params.orderId;
