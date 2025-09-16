@@ -85,21 +85,21 @@ exports.confirmMealBoxOrder = async (req, res) => {
 		res.status(200).json({
 			success: true,
 			message: 'Order confirmed',
-			order: {
-				_id: updatedOrder._id,
-				customerName: updatedOrder.customerName,
-				customerEmail: updatedOrder.customerEmail,
-				customerMobile: updatedOrder.customerMobile,
-				mealBox: updatedOrder.mealBox,
-				quantity: updatedOrder.quantity,
-				vendor: updatedOrder.vendor,
-				type: updatedOrder.type,
-				status: updatedOrder.status,
-				deliveryTime: updatedOrder.deliveryTime,
-				deliveryDate: updatedOrder.deliveryDate,
-				createdAt: updatedOrder.createdAt,
-				updatedAt: updatedOrder.updatedAt
-			}
+		order: {
+			_id: updatedOrder._id,
+			customerName: updatedOrder.customerName,
+			customerEmail: updatedOrder.customerEmail,
+			customerMobile: updatedOrder.customerMobile,
+			mealBox: updatedOrder.mealBox,
+			quantity: updatedOrder.quantity,
+			vendor: updatedOrder.vendor,
+			type: updatedOrder.type,
+			status: updatedOrder.status,
+			deliveryTime: updatedOrder.deliveryTime || null,
+			deliveryDate: updatedOrder.deliveryDate || null,
+			createdAt: updatedOrder.createdAt,
+			updatedAt: updatedOrder.updatedAt
+		}
 		});
 	} catch (error) {
 		res.status(500).json({ success: false, message: error.message });
