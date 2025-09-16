@@ -75,43 +75,74 @@ exports.cancelMealBoxOrder = async (req, res) => {
 		res.status(500).json({ success: false, message: error.message });
 	}
 };
-// Confirm a mealbox order (any authenticated user, if status is pending)
+// Confirm a mealbox order (vendor only, single definition, sets deliveryTime and deliveryDate)
 exports.confirmMealBoxOrder = async (req, res) => {
 	try {
 		const orderId = req.params.orderId;
+		const vendorId = req.user && req.user._id;
 		if (!orderId) {
 			return res.status(400).json({ success: false, message: 'Order ID required.' });
 		}
-		const MealBoxOrder = require('../models/MealBoxOrder');
-		// Find order by ID
+		if (!vendorId) {
+			return res.status(401).json({ success: false, message: 'Vendor authentication required.' });
+		}
+		// Find order without populate for update check
 		const order = await MealBoxOrder.findById(orderId);
 		if (!order) {
-			return res.status(404).json({ success: false, message: 'Order not found.' });
+			return res.status(404).json({ success: false, message: 'Order not found' });
 		}
-		// Only change status if currently pending
-		if (order.status !== 'pending') {
-			return res.status(400).json({ success: false, message: 'Order cannot be confirmed. Status is not pending.' });
+		// Check vendor ownership: allow if vendor matches either order.vendor or mealBox.vendor
+		const orderVendorId = String(order.vendor);
+		// To check mealBox.vendor, need to fetch mealBox
+		const mealBox = await MealBox.findById(order.mealBox);
+		const mealBoxVendorId = mealBox ? String(mealBox.vendor) : '';
+		const tokenVendorId = String(vendorId);
+		if (orderVendorId !== tokenVendorId && mealBoxVendorId !== tokenVendorId) {
+			return res.status(403).json({ success: false, message: 'Unauthorized: You can only confirm your own mealbox orders.' });
 		}
-		// Set delivery time and date if provided
-		if (req.body.deliveryTime !== undefined) order.deliveryTime = String(req.body.deliveryTime);
-		if (req.body.deliveryDate !== undefined) order.deliveryDate = String(req.body.deliveryDate);
-		order.status = 'confirmed';
-		await order.save();
+		// Allow updating deliveryTime and deliveryDate even if already confirmed
+		const updateFields = {};
+		if (order.status === 'pending') {
+			updateFields.status = 'confirmed';
+		}
+		// Always set deliveryTime and deliveryDate, even if null
+		updateFields.deliveryTime = req.body.deliveryTime !== undefined ? String(req.body.deliveryTime) : null;
+		updateFields.deliveryDate = req.body.deliveryDate !== undefined ? String(req.body.deliveryDate) : null;
+		console.log('DEBUG confirmMealBoxOrder:');
+		console.log('Request body:', req.body);
+		console.log('Update fields:', updateFields);
+		if (Object.keys(updateFields).length === 0) {
+			return res.status(400).json({ success: false, message: 'No fields to update.' });
+		}
+		// Debug logging
+		console.log('DEBUG confirmMealBoxOrder:');
+		console.log('Request body:', req.body);
+		console.log('Update fields:', updateFields);
+		// Update and return new document with populated fields
+		const updatedOrder = await MealBoxOrder.findByIdAndUpdate(
+			orderId,
+			{ $set: updateFields },
+			{ new: true }
+		).populate('mealBox vendor');
+		console.log('Updated order:', updatedOrder);
 		res.status(200).json({
 			success: true,
-			message: 'Order confirmed successfully!',
-			order: {
-				_id: order._id,
-				mealBox: order.mealBox,
-				quantity: order.quantity,
-				vendor: order.vendor,
-				type: order.type,
-				status: order.status,
-				deliveryTime: order.deliveryTime,
-				deliveryDate: order.deliveryDate,
-				createdAt: order.createdAt,
-				updatedAt: order.updatedAt
-			}
+			message: 'Order confirmed',
+		order: {
+			_id: updatedOrder._id,
+			customerName: updatedOrder.customerName,
+			customerEmail: updatedOrder.customerEmail,
+			customerMobile: updatedOrder.customerMobile,
+			mealBox: updatedOrder.mealBox,
+			quantity: updatedOrder.quantity,
+			vendor: updatedOrder.vendor,
+			type: updatedOrder.type,
+			status: updatedOrder.status,
+			deliveryTime: updatedOrder.deliveryTime || null,
+			deliveryDate: updatedOrder.deliveryDate || null,
+			createdAt: updatedOrder.createdAt,
+			updatedAt: updatedOrder.updatedAt
+		}
 		});
 	} catch (error) {
 		res.status(500).json({ success: false, message: error.message });
@@ -314,22 +345,29 @@ exports.createMealBox = async (req, res) => {
 					prepareOrderDays,
 					sampleAvailable,
 					items,
-						if (!orderId) {
-							return res.status(400).json({ success: false, message: 'Order ID required.' });
-						}
-						const MealBoxOrder = require('../models/MealBoxOrder'),
-						const order = await MealBoxOrder.findById(orderId);
+					packagingDetails,
+					boxImage: req.files && req.files.boxImage,
+					actualImage: req.files && req.files.actualImage,
+					vendor
+				}
+			});
+		}
+		// No deliveryDate calculation, just use prepareOrderDays
 		// Ensure items is always an array of ObjectIds
 		let itemsArr = items;
 		if (typeof itemsArr === 'string') {
-						// Only change status if currently pending
-						if (order.status !== 'pending') {
-							return res.status(400).json({ success: false, message: 'Order cannot be confirmed. Status is not pending.' });
-						}
-						// Set delivery time and date if provided
-						if (req.body.deliveryTime !== undefined) order.deliveryTime = String(req.body.deliveryTime);
-						if (req.body.deliveryDate !== undefined) order.deliveryDate = String(req.body.deliveryDate);
-						order.status = 'confirmed';
+			try {
+				itemsArr = JSON.parse(itemsArr);
+			} catch {
+				itemsArr = itemsArr.split(',').map(i => i.trim());
+			}
+		}
+		if (!Array.isArray(itemsArr)) {
+			itemsArr = [itemsArr];
+		}
+		// Create new MealBox
+		const mealBox = new MealBox({
+			title,
 			description,
 			minQty: Number(minQty),
 			price: Number(price),
