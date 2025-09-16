@@ -1,3 +1,44 @@
+// Mark mealbox order as delivered (tracking update)
+exports.markMealBoxOrderDelivered = async (req, res) => {
+	try {
+		const orderId = req.params.id;
+		const { deliveryDate, deliveryTime } = req.body;
+		if (!orderId) {
+			return res.status(400).json({ success: false, message: 'Order ID required.' });
+		}
+		const MealBoxOrder = require('../models/MealBoxOrder');
+		const order = await MealBoxOrder.findById(orderId);
+		if (!order) {
+			return res.status(404).json({ success: false, message: 'Order not found.' });
+		}
+		// Update delivery fields and status
+		order.deliveryDate = deliveryDate || order.deliveryDate;
+		order.deliveryTime = deliveryTime || order.deliveryTime;
+		order.status = 'delivered';
+		await order.save();
+		res.status(200).json({
+			success: true,
+			message: 'MealBox order marked as delivered',
+			order: {
+				_id: order._id,
+				customerName: order.customerName,
+				customerEmail: order.customerEmail,
+				customerMobile: order.customerMobile,
+				mealBox: order.mealBox,
+				quantity: order.quantity,
+				vendor: order.vendor,
+				type: order.type,
+				status: order.status,
+				deliveryTime: order.deliveryTime || null,
+				deliveryDate: order.deliveryDate || null,
+				createdAt: order.createdAt,
+				updatedAt: order.updatedAt
+			}
+		});
+	} catch (error) {
+		res.status(500).json({ success: false, message: error.message });
+	}
+};
 // Cancel mealbox order by mealbox_id and vendor, with reason
 exports.cancelMealBoxOrder = async (req, res) => {
 	try {

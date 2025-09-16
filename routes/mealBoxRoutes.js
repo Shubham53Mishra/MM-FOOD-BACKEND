@@ -1,3 +1,6 @@
+const { markMealBoxOrderDelivered } = require('../controllers/mealBox.controller');
+// PUT /api/mealbox/tracking/:id/delivered - mark mealbox order as delivered
+router.put('/tracking/:id/delivered', markMealBoxOrderDelivered);
 const express = require('express');
 const router = express.Router();
 const auth = require('../middlewares/auth');
