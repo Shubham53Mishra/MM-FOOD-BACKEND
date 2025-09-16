@@ -10,6 +10,8 @@ const mealBoxOrderSchema = new mongoose.Schema({
   type: { type: String }, // e.g. 'mealbox'
   cancelReason: { type: String },
   deliveryAddress: { type: String },
+  deliveryTime: { type: String, default: null },
+  deliveryDate: { type: String, default: null },
   status: { type: String, default: 'pending' }
 }, { timestamps: true });
 

@@ -49,7 +49,9 @@ exports.confirmMealBoxOrder = async (req, res) => {
 		if (order.status !== 'pending') {
 			return res.status(400).json({ success: false, message: 'Order cannot be confirmed. Status is not pending.' });
 		}
-		// Change status
+		// Set delivery time and date if provided
+		if (req.body.deliveryTime !== undefined) order.deliveryTime = String(req.body.deliveryTime);
+		if (req.body.deliveryDate !== undefined) order.deliveryDate = String(req.body.deliveryDate);
 		order.status = 'confirmed';
 		await order.save();
 		res.status(200).json({
@@ -62,6 +64,8 @@ exports.confirmMealBoxOrder = async (req, res) => {
 				vendor: order.vendor,
 				type: order.type,
 				status: order.status,
+				deliveryTime: order.deliveryTime,
+				deliveryDate: order.deliveryDate,
 				createdAt: order.createdAt,
 				updatedAt: order.updatedAt
 			}
