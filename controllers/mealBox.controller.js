@@ -231,12 +231,33 @@ exports.confirmMealBoxOrder = async (req, res) => {
 		if (orderVendorId !== tokenVendorId || mealBoxVendorId !== tokenVendorId) {
 			return res.status(403).json({ success: false, message: 'Unauthorized: You can only confirm your own mealbox orders.' });
 		}
-		if (order.status !== 'pending') {
-			return res.status(400).json({ success: false, message: 'Order cannot be confirmed. Status is not pending.' });
+		// Allow updating deliveryTime and deliveryDate even if already confirmed
+		if (order.status === 'pending') {
+			order.status = 'confirmed';
 		}
-		order.status = 'confirmed';
+		order.deliveryTime = req.body.deliveryTime !== undefined ? String(req.body.deliveryTime) : order.deliveryTime || null;
+		order.deliveryDate = req.body.deliveryDate !== undefined ? String(req.body.deliveryDate) : order.deliveryDate || null;
 		await order.save();
-		res.status(200).json({ success: true, message: 'Order confirmed', order });
+		// Return a consistent response structure
+		res.status(200).json({
+			success: true,
+			message: 'Order confirmed',
+			order: {
+				_id: order._id,
+				customerName: order.customerName,
+				customerEmail: order.customerEmail,
+				customerMobile: order.customerMobile,
+				mealBox: order.mealBox,
+				quantity: order.quantity,
+				vendor: order.vendor,
+				type: order.type,
+				status: order.status,
+				deliveryTime: order.deliveryTime || null,
+				deliveryDate: order.deliveryDate || null,
+				createdAt: order.createdAt,
+				updatedAt: order.updatedAt
+			}
+		});
 	} catch (error) {
 		res.status(500).json({ success: false, message: error.message });
 	}
