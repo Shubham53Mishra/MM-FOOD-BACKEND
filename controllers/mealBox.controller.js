@@ -61,6 +61,7 @@ exports.confirmMealBoxOrder = async (req, res) => {
 		res.status(200).json({
 			success: true,
 			message: 'Order confirmed successfully!',
+			receivedBody: req.body,
 			order: {
 				_id: order._id,
 				mealBox: order.mealBox,
