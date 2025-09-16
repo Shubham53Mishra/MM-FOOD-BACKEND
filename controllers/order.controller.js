@@ -1,3 +1,33 @@
+// Mark order as delivered and update tracking
+exports.markOrderDelivered = async (req, res) => {
+	try {
+		const Order = require('../models/Order');
+		const { id } = req.params;
+		const order = await Order.findById(id);
+		if (!order) {
+			return res.status(404).json({ success: false, message: 'Order not found' });
+		}
+			order.status = 'delivered';
+			// Accept deliveryDate and deliveryTime from request body, fallback to now if not provided
+			order.deliveryDate = req.body.deliveryDate || new Date().toISOString().slice(0, 10);
+			order.deliveryTime = req.body.deliveryTime || new Date().toTimeString().slice(0, 5);
+			order.updatedAt = new Date();
+			await order.save();
+			res.status(200).json({
+				success: true,
+				message: 'Order marked as delivered',
+				order: {
+					_id: order._id,
+					status: order.status,
+					deliveryDate: order.deliveryDate,
+					deliveryTime: order.deliveryTime,
+					updatedAt: order.updatedAt
+				}
+			});
+	} catch (error) {
+		res.status(500).json({ success: false, message: error.message });
+	}
+};
 exports.getOrderTracking = async (req, res) => {
 	try {
 		const Order = require('../models/Order');
