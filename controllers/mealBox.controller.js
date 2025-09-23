@@ -16,6 +16,9 @@ exports.markMealBoxOrderDelivered = async (req, res) => {
 		order.deliveryTime = deliveryTime || order.deliveryTime;
 		order.status = 'delivered';
 		await order.save();
+        // Emit socket event for real-time update
+        const io = req.app.get('io');
+        if (io) io.emit('mealboxOrderUpdated', { action: 'delivered', order });
 		res.status(200).json({
 			success: true,
 			message: 'MealBox order marked as delivered',
@@ -75,6 +78,9 @@ exports.cancelMealBoxOrder = async (req, res) => {
 			order.status = 'cancelled';
 			order.cancelReason = reason;
 			await order.save();
+            // Emit socket event for real-time update
+            const io = req.app.get('io');
+            if (io) io.emit('mealboxOrderUpdated', { action: 'cancelled', order });
 			res.status(200).json({ success: true, message: 'Order cancelled.', order });
 		} catch (error) {
 			sendError(500, error.message, { error });
@@ -130,6 +136,9 @@ exports.confirmMealBoxOrder = async (req, res) => {
 			{ new: true }
 		).populate('mealBox vendor');
 		console.log('Updated order:', updatedOrder);
+        // Emit socket event for real-time update
+        const io = req.app.get('io');
+        if (io) io.emit('mealboxOrderUpdated', { action: 'confirmed', order: updatedOrder });
 		res.status(200).json({
 			success: true,
 			message: 'Order confirmed',
@@ -200,6 +209,9 @@ exports.createMealBoxOrder = async (req, res) => {
 			status: status || 'pending'
 		});
 		await mealBoxOrder.save();
+        // Emit socket event for real-time update
+        const io = req.app.get('io');
+        if (io) io.emit('mealboxOrderUpdated', { action: 'created', order: mealBoxOrder });
 		res.status(201).json({
 			success: true,
 			message: 'MealBox order created',

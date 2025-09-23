@@ -23,5 +23,26 @@ app.use('/api/mealbox', require('./routes/mealBoxRoutes'));
 app.use('/api/item', require('./routes/item.routes'));
 
 
+
+const http = require('http').createServer(app);
+const { Server } = require('socket.io');
+const io = new Server(http, {
+	cors: {
+		origin: '*',
+		methods: ['GET', 'POST']
+	}
+});
+
+// Socket.io connection
+io.on('connection', (socket) => {
+	console.log('Client connected:', socket.id);
+	socket.on('disconnect', () => {
+		console.log('Client disconnected:', socket.id);
+	});
+});
+
+// Make io accessible in routes/controllers
+app.set('io', io);
+
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
+http.listen(PORT, () => console.log(`🚀 Server running on port ${PORT} (WebSocket enabled)`));

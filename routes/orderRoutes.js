@@ -74,6 +74,10 @@ router.post('/create', auth, async (req, res) => {
       orderId: customOrderId
     });
     await order.save();
+    // Emit ordersUpdated event
+    const io = req.app.get('io');
+    const orders = await Order.find().populate('items.category items.subCategory vendor');
+    io.emit('ordersUpdated', orders);
     res.status(201).json({ message: "Order placed", order });
   } catch (err) {
     res.status(500).json({ message: "Error placing order", error: err.message });
@@ -180,6 +184,10 @@ router.put('/confirm/:orderId', authVendor, async (req, res) => {
   if (req.body.deliveryTime !== undefined) order.deliveryTime = String(req.body.deliveryTime);
   if (req.body.deliveryDate !== undefined) order.deliveryDate = String(req.body.deliveryDate);
   await order.save();
+  // Emit ordersUpdated event
+  const io = req.app.get('io');
+  const orders = await Order.find().populate('items.category items.subCategory vendor');
+  io.emit('ordersUpdated', orders);
   res.json({ message: "Order confirmed", order });
   } catch (err) {
     res.status(500).json({ message: "Error confirming order", error: err.message });
@@ -200,7 +208,11 @@ router.put('/cancel/:orderId', async (req, res) => {
     order.status = 'cancelled';
     order.cancelReason = reason;
     await order.save();
-    res.json({ message: "Order cancelled", order });
+  // Emit ordersUpdated event
+  const io = req.app.get('io');
+  const orders = await Order.find().populate('items.category items.subCategory vendor');
+  io.emit('ordersUpdated', orders);
+  res.json({ message: "Order cancelled", order });
   } catch (err) {
     res.status(500).json({ message: "Error cancelling order", error: err.message });
   }
