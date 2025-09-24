@@ -47,6 +47,9 @@ const updateOrder = (order, action) => {
 	io.to(vendorRoom).emit('orderUpdated', { action, order });
 	console.log(`[SOCKET] Emitting orderUpdated:${action} to vendor room`, vendorRoom, order._id);
 };
+
+// Export updateOrder for use in controllers
+module.exports.updateOrder = updateOrder;
 // Socket.io connection
 io.on('connection', (socket) => {
 	console.log('Client connected:', socket.id);
