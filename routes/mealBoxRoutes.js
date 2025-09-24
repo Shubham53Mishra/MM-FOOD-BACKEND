@@ -44,7 +44,7 @@ router.get('/favorites', auth, getFavoriteMealBoxes);
 // DELETE /api/mealbox/:id - delete a mealbox
 router.delete('/:id', deleteMealBox);
 // PUT /api/mealbox/:id - update a mealbox
-router.put('/:id', updateMealBox);
+router.put('/:id', upload.fields([{ name: 'boxImage' }, { name: 'actualImage' }]), updateMealBox);
 // POST /api/mealbox/upload-item-image - upload image for custom item
 router.post('/upload-item-image', upload.single('image'), uploadCustomItemImage);
 // POST /api/mealbox/:mealBoxId/add-items - add multiple custom items to a mealbox
