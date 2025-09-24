@@ -60,16 +60,16 @@ const updateMealOrder = (updatedOrderData) => {
 
 
 const updateOrder = (order, action) => {
-	if (!order) return;
-	// Emit to vendor room (for vendor dashboard)
-	if (order.vendor) {
-		const vendorRoom = order.vendor.toString();
-		io.to(vendorRoom).emit('orderUpdated', { action, order });
-		console.log(`[SOCKET] Emitting orderUpdated:${action} to vendor room`, vendorRoom, order._id);
-	}
-	// Emit to order-specific room (for tracking)
-	io.to(`order_${order._id}`).emit('orderTrackingUpdated', { action, order });
-	console.log(`[SOCKET] Emitting orderTrackingUpdated:${action} to order room`, `order_${order._id}`);
+	   if (!order) return;
+	   // Emit to vendor room (for vendor dashboard)
+	   if (order.vendor) {
+		   const vendorRoom = order.vendor.toString();
+		   io.to(vendorRoom).emit('orderUpdated', { action, order });
+		   console.log(`[SOCKET] Emitting orderUpdated:${action} to vendor room`, vendorRoom, order._id);
+	   }
+	   // Emit to order-specific room (for tracking)
+	   io.to(`order_${order._id}`).emit('orderTrackingUpdated', { action, order });
+	   console.log(`[SOCKET] Emitting orderTrackingUpdated:${action} to order room`, `order_${order._id}`, 'Order status:', order.status, 'UpdatedAt:', order.updatedAt);
 };
 
 // Export updateOrder for use in controllers

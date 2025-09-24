@@ -33,28 +33,31 @@ exports.markOrderDelivered = async (req, res) => {
 };
 exports.getOrderTracking = async (req, res) => {
 	try {
-		const Order = require('../models/Order');
-		const order = await Order.findById(req.params.id);
-		if (!order) {
-			return res.status(404).json({ success: false, message: 'Order not found' });
-		}
-		res.status(200).json({
-			success: true,
-			order: {
-				_id: order._id,
-				customerName: order.customerName,
-				customerEmail: order.customerEmail,
-				customerMobile: order.customerMobile,
-				items: order.items,
-				vendor: order.vendor,
-				status: order.status,
-				orderId: order.orderId,
-				createdAt: order.createdAt,
-				updatedAt: order.updatedAt,
-				deliveryTime: order.deliveryTime || null,
-				deliveryDate: order.deliveryDate || null
-			}
-		});
+		   const Order = require('../models/Order');
+		   const order = await Order.findById(req.params.id);
+		   console.log('[TRACKING] getOrderTracking called for orderId:', req.params.id);
+		   if (!order) {
+			   console.log('[TRACKING] Order not found:', req.params.id);
+			   return res.status(404).json({ success: false, message: 'Order not found' });
+		   }
+		   console.log('[TRACKING] Order found:', order.status, order.updatedAt);
+		   res.status(200).json({
+			   success: true,
+			   order: {
+				   _id: order._id,
+				   customerName: order.customerName,
+				   customerEmail: order.customerEmail,
+				   customerMobile: order.customerMobile,
+				   items: order.items,
+				   vendor: order.vendor,
+				   status: order.status,
+				   orderId: order.orderId,
+				   createdAt: order.createdAt,
+				   updatedAt: order.updatedAt,
+				   deliveryTime: order.deliveryTime || null,
+				   deliveryDate: order.deliveryDate || null
+			   }
+		   });
 	} catch (error) {
 		res.status(500).json({ success: false, message: error.message });
 	}
@@ -129,35 +132,34 @@ exports.confirmOrder = async (req, res) => {
 			return res.status(400).json({ success: false, message: 'Order cannot be confirmed. Status is not pending.' });
 		}
 		// Set delivery time and date (Indian time)
-		if (req.body.deliveryTime !== undefined) order.deliveryTime = String(req.body.deliveryTime);
-		if (req.body.deliveryDate !== undefined) order.deliveryDate = String(req.body.deliveryDate);
-		order.markModified('deliveryTime');
-		order.markModified('deliveryDate');
-		order.status = 'confirmed';
-		await order.save();
-
-		// Emit socket event for real-time update
-		const { updateOrder } = require('../server');
-		updateOrder(order, 'confirmed');
-
-		res.status(200).json({
-			success: true,
-			message: 'Order confirmed',
-			order: {
-				_id: order._id,
-				customerName: order.customerName,
-				customerEmail: order.customerEmail,
-				customerMobile: order.customerMobile,
-				items: order.items,
-				vendor: order.vendor,
-				status: order.status,
-				orderId: order.orderId,
-				createdAt: order.createdAt,
-				updatedAt: order.updatedAt,
-				deliveryTime: order.deliveryTime,
-				deliveryDate: order.deliveryDate
-			}
-		});
+		   if (req.body.deliveryTime !== undefined) order.deliveryTime = String(req.body.deliveryTime);
+		   if (req.body.deliveryDate !== undefined) order.deliveryDate = String(req.body.deliveryDate);
+		   order.markModified('deliveryTime');
+		   order.markModified('deliveryDate');
+		   order.status = 'confirmed';
+		   await order.save();
+		   console.log('[ORDER UPDATE] Order confirmed:', order._id, order.status, order.updatedAt);
+		   // Emit socket event for real-time update
+		   const { updateOrder } = require('../server');
+		   updateOrder(order, 'confirmed');
+		   res.status(200).json({
+			   success: true,
+			   message: 'Order confirmed',
+			   order: {
+				   _id: order._id,
+				   customerName: order.customerName,
+				   customerEmail: order.customerEmail,
+				   customerMobile: order.customerMobile,
+				   items: order.items,
+				   vendor: order.vendor,
+				   status: order.status,
+				   orderId: order.orderId,
+				   createdAt: order.createdAt,
+				   updatedAt: order.updatedAt,
+				   deliveryTime: order.deliveryTime,
+				   deliveryDate: order.deliveryDate
+			   }
+		   });
 	// Add similar socket emit for cancel order if not present
 	// If you have a cancel order function, add:
 	// const io = req.app && req.app.get('io');
