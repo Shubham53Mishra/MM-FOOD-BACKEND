@@ -452,5 +452,4 @@ exports.getConfirmedMealBoxOrdersWithTracking = async (req, res) => {
 };
 
 // Fix for destructuring import in routes
-module.exports = exports;
 //# sourceMappingURL=mealboxController.js.map

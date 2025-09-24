@@ -111,27 +111,47 @@ exports.createMealBoxOrder = async (req, res) => {
 // Confirm an order
 exports.confirmOrder = async (req, res) => {
 	console.log('ConfirmOrder received body:', req.body);
-    try {
-        const orderId = req.params.id;
-        const { deliveryTime, deliveryDate } = req.body;
-        if (!orderId) {
-            return res.status(400).json({ success: false, message: 'Order ID required.' });
-        }
-        const Order = require('../models/Order');
-        const order = await Order.findById(orderId);
-        if (!order) {
-            return res.status(404).json({ success: false, message: 'Order not found.' });
-        }
-        if (order.status !== 'pending') {
-            return res.status(400).json({ success: false, message: 'Order cannot be confirmed. Status is not pending.' });
-        }
+	try {
+		const orderId = req.params.id;
+		const { deliveryTime, deliveryDate } = req.body;
+		if (!orderId) {
+			return res.status(400).json({ success: false, message: 'Order ID required.' });
+		}
+		const Order = require('../models/Order');
+		const order = await Order.findById(orderId);
+		if (!order) {
+			return res.status(404).json({ success: false, message: 'Order not found.' });
+		}
+		if (order.status !== 'pending') {
+			return res.status(400).json({ success: false, message: 'Order cannot be confirmed. Status is not pending.' });
+		}
 		// Set delivery time and date (Indian time)
-	if (req.body.deliveryTime !== undefined) order.deliveryTime = String(req.body.deliveryTime);
-	if (req.body.deliveryDate !== undefined) order.deliveryDate = String(req.body.deliveryDate);
+		if (req.body.deliveryTime !== undefined) order.deliveryTime = String(req.body.deliveryTime);
+		if (req.body.deliveryDate !== undefined) order.deliveryDate = String(req.body.deliveryDate);
 		order.markModified('deliveryTime');
 		order.markModified('deliveryDate');
 		order.status = 'confirmed';
 		await order.save();
+
+		// Emit socket event to all clients
+		const io = req.app && req.app.get('io');
+		if (io) {
+			io.emit('orderConfirmed', {
+				_id: order._id,
+				customerName: order.customerName,
+				customerEmail: order.customerEmail,
+				customerMobile: order.customerMobile,
+				items: order.items,
+				vendor: order.vendor,
+				status: order.status,
+				orderId: order.orderId,
+				createdAt: order.createdAt,
+				updatedAt: order.updatedAt,
+				deliveryTime: order.deliveryTime,
+				deliveryDate: order.deliveryDate
+			});
+		}
+
 		res.status(200).json({
 			success: true,
 			message: 'Order confirmed',
@@ -150,9 +170,9 @@ exports.confirmOrder = async (req, res) => {
 				deliveryDate: order.deliveryDate
 			}
 		});
-    } catch (error) {
-        res.status(500).json({ success: false, message: error.message });
-    }
+	} catch (error) {
+		res.status(500).json({ success: false, message: error.message });
+	}
 };
 // Get confirmed orders with tracking information
 exports.getConfirmedOrdersWithTracking = async (req, res) => {

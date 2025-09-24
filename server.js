@@ -33,9 +33,23 @@ const io = new Server(http, {
 	}
 });
 
+
+// Example: emit after updating meal order (modify as per your real update logic)
+const updateMealOrder = (updatedOrderData) => {
+	// This sends new data to all connected clients!
+	io.emit('mealOrderUpdated', updatedOrderData);
+};
+
 // Socket.io connection
 io.on('connection', (socket) => {
 	console.log('Client connected:', socket.id);
+
+	// Sample: On admin confirms order, broadcast update
+	socket.on('orderConfirmed', (data) => {
+		// Update DB, etc...
+		updateMealOrder(data); // Broadcast to all clients!
+	});
+
 	socket.on('disconnect', () => {
 		console.log('Client disconnected:', socket.id);
 	});
