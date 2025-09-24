@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { getConfirmedOrdersWithTracking, markOrderDelivered } = require('../controllers/order.controller');
+const { getConfirmedOrdersWithTracking, markOrderDelivered, getOrderTracking } = require('../controllers/order.controller');
 // Mark order as delivered (tracking update)
 router.put('/tracking/:id/delivered', markOrderDelivered);
 const auth = require('../middlewares/auth');
@@ -100,6 +100,8 @@ function authVendor(req, res, next) {
 // GET /api/orders/tracking - show confirmed orders with delivery info
 // GET /api/orders/tracking - show confirmed orders for logged-in user
 router.get('/tracking', auth, getConfirmedOrdersWithTracking);
+// GET /api/orders/tracking/:id - show tracking for a specific order
+router.get('/tracking/:id', auth, getOrderTracking);
 router.get('/vendor-orders', authVendor, async (req, res) => {
   try {
     const orders = await Order.find({ vendor: req.vendorId }).populate('items.category items.subCategory');
