@@ -460,8 +460,50 @@ exports.deleteMealBox = async (req, res) => {
 	}
 };
 exports.updateMealBox = async (req, res) => {
-	res.status(200).json({ success: true, message: 'updateMealBox placeholder' });
-};
+		try {
+			const mealBoxId = req.params.id;
+			if (!mealBoxId) {
+				return res.status(400).json({ success: false, message: 'MealBox ID required.' });
+			}
+
+			// Build update object from allowed fields
+			const allowedFields = [
+				'title', 'description', 'minQty', 'price', 'prepareOrderDays',
+				'sampleAvailable', 'items', 'packagingDetails', 'boxImage', 'actualImage', 'vendor'
+			];
+			const updateData = {};
+			for (const field of allowedFields) {
+				if (req.body[field] !== undefined) {
+					updateData[field] = req.body[field];
+				}
+			}
+
+			// If items is a string, try to parse it as JSON or comma-separated
+			if (updateData.items && typeof updateData.items === 'string') {
+				try {
+					updateData.items = JSON.parse(updateData.items);
+				} catch {
+					updateData.items = updateData.items.split(',').map(i => i.trim());
+				}
+			}
+
+			// Update the MealBox
+			const updatedMealBox = await MealBox.findByIdAndUpdate(
+				mealBoxId,
+				{ $set: updateData },
+				{ new: true }
+			).populate({ path: 'vendor', select: '_id name email mobile' });
+
+			if (!updatedMealBox) {
+				return res.status(404).json({ success: false, message: 'MealBox not found.' });
+			}
+
+			res.status(200).json({ success: true, message: 'MealBox updated successfully.', mealBox: updatedMealBox });
+		} catch (error) {
+			res.status(500).json({ success: false, message: error.message });
+		}
+	}
+
 exports.addCustomItemToMealBox = async (req, res) => {
 	res.status(200).json({ success: true, message: 'addCustomItemToMealBox placeholder' });
 };
