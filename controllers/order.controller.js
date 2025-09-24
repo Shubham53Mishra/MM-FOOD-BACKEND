@@ -13,6 +13,9 @@ exports.markOrderDelivered = async (req, res) => {
 			order.deliveryTime = req.body.deliveryTime || new Date().toTimeString().slice(0, 5);
 			order.updatedAt = new Date();
 			await order.save();
+			// Emit socket event for real-time update
+			const io = req.app && req.app.get('io');
+			if (io) io.emit('orderUpdated', { action: 'delivered', order });
 			res.status(200).json({
 				success: true,
 				message: 'Order marked as delivered',
@@ -133,24 +136,9 @@ exports.confirmOrder = async (req, res) => {
 		order.status = 'confirmed';
 		await order.save();
 
-		// Emit socket event to all clients
+		// Emit socket event for real-time update
 		const io = req.app && req.app.get('io');
-		if (io) {
-			io.emit('orderConfirmed', {
-				_id: order._id,
-				customerName: order.customerName,
-				customerEmail: order.customerEmail,
-				customerMobile: order.customerMobile,
-				items: order.items,
-				vendor: order.vendor,
-				status: order.status,
-				orderId: order.orderId,
-				createdAt: order.createdAt,
-				updatedAt: order.updatedAt,
-				deliveryTime: order.deliveryTime,
-				deliveryDate: order.deliveryDate
-			});
-		}
+		if (io) io.emit('orderUpdated', { action: 'confirmed', order });
 
 		res.status(200).json({
 			success: true,
@@ -170,6 +158,10 @@ exports.confirmOrder = async (req, res) => {
 				deliveryDate: order.deliveryDate
 			}
 		});
+	// Add similar socket emit for cancel order if not present
+	// If you have a cancel order function, add:
+	// const io = req.app && req.app.get('io');
+	// if (io) io.emit('orderUpdated', { action: 'cancelled', order });
 	} catch (error) {
 		res.status(500).json({ success: false, message: error.message });
 	}

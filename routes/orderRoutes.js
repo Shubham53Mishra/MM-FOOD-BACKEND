@@ -208,11 +208,10 @@ router.put('/cancel/:orderId', async (req, res) => {
     order.status = 'cancelled';
     order.cancelReason = reason;
     await order.save();
-  // Emit ordersUpdated event
-  const io = req.app.get('io');
-  const orders = await Order.find().populate('items.category items.subCategory vendor');
-  io.emit('ordersUpdated', orders);
-  res.json({ message: "Order cancelled", order });
+    // Emit orderUpdated event for real-time update
+    const io = req.app.get('io');
+    if (io) io.emit('orderUpdated', { action: 'cancelled', order });
+    res.json({ message: "Order cancelled", order });
   } catch (err) {
     res.status(500).json({ message: "Error cancelling order", error: err.message });
   }
