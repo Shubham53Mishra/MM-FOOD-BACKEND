@@ -18,10 +18,7 @@ exports.markMealBoxOrderDelivered = async (req, res) => {
 		await order.save();
         // Emit socket event for real-time update
         const io = req.app.get('io');
-		if (io) {
-			console.log('Emitting mealboxOrderUpdated event: delivered', order);
-			io.emit('mealboxOrderUpdated', { action: 'delivered', order });
-		}
+		if (io) io.emit('mealboxOrderUpdated', { action: 'delivered', order });
 		res.status(200).json({
 			success: true,
 			message: 'MealBox order marked as delivered',
@@ -83,10 +80,7 @@ exports.cancelMealBoxOrder = async (req, res) => {
 			await order.save();
             // Emit socket event for real-time update
             const io = req.app.get('io');
-			if (io) {
-				console.log('Emitting mealboxOrderUpdated event: cancelled', order);
-				io.emit('mealboxOrderUpdated', { action: 'cancelled', order });
-			}
+			if (io) io.emit('mealboxOrderUpdated', { action: 'cancelled', order });
 			res.status(200).json({ success: true, message: 'Order cancelled.', order });
 		} catch (error) {
 			sendError(500, error.message, { error });
@@ -144,10 +138,7 @@ exports.confirmMealBoxOrder = async (req, res) => {
 		console.log('Updated order:', updatedOrder);
         // Emit socket event for real-time update
         const io = req.app.get('io');
-		if (io) {
-			console.log('Emitting mealboxOrderUpdated event: confirmed', updatedOrder);
-			io.emit('mealboxOrderUpdated', { action: 'confirmed', order: updatedOrder });
-		}
+		if (io) io.emit('mealboxOrderUpdated', { action: 'confirmed', order: updatedOrder });
 		res.status(200).json({
 			success: true,
 			message: 'Order confirmed',
@@ -220,10 +211,7 @@ exports.createMealBoxOrder = async (req, res) => {
 		await mealBoxOrder.save();
         // Emit socket event for real-time update
         const io = req.app.get('io');
-		if (io) {
-			console.log('Emitting mealboxOrderUpdated event: created', mealBoxOrder);
-			io.emit('mealboxOrderUpdated', { action: 'created', order: mealBoxOrder });
-		}
+		if (io) io.emit('mealboxOrderUpdated', { action: 'created', order: mealBoxOrder });
 		res.status(201).json({
 			success: true,
 			message: 'MealBox order created',
