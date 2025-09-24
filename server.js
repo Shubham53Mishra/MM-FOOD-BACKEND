@@ -40,6 +40,13 @@ const updateMealOrder = (updatedOrderData) => {
 	io.emit('mealOrderUpdated', updatedOrderData);
 };
 
+
+const updateOrder = (order, action) => {
+	if (!order || !order.vendor) return;
+	const vendorRoom = order.vendor.toString();
+	io.to(vendorRoom).emit('orderUpdated', { action, order });
+	console.log(`[SOCKET] Emitting orderUpdated:${action} to vendor room`, vendorRoom, order._id);
+};
 // Socket.io connection
 io.on('connection', (socket) => {
 	console.log('Client connected:', socket.id);
