@@ -30,7 +30,9 @@ const io = new Server(http, {
 	cors: {
 		origin: '*',
 		methods: ['GET', 'POST']
-	}
+	},
+	pingInterval: 25000, // 25 seconds
+	pingTimeout: 60000   // 60 seconds
 });
 
 
