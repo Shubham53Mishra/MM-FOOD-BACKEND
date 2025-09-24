@@ -4,6 +4,9 @@ const updateMealBoxOrderTracking = (order, action) => {
 	io.to(`mealbox_order_${order._id}`).emit('mealboxOrderTrackingUpdated', { action, order });
 	console.log(`[SOCKET] Emitting mealboxOrderTrackingUpdated:${action} to mealbox_order_${order._id}`);
 };
+
+// Export for use in controllers
+module.exports.updateMealBoxOrderTracking = updateMealBoxOrderTracking;
 // Use custom .env file path if needed
 require('dotenv').config({ path: './.env' });
 const express = require('express');
