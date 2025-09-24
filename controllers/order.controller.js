@@ -148,6 +148,7 @@ exports.confirmOrder = async (req, res) => {
 		   order.markModified('deliveryTime');
 		   order.markModified('deliveryDate');
 		   order.status = 'confirmed';
+		   console.log('[ORDER STATUS] Status set to CONFIRMED for order:', order._id);
 		   await order.save();
 		   console.log('[ORDER UPDATE] Order confirmed:', order._id, order.status, order.updatedAt);
 		   // Emit socket event for real-time update
