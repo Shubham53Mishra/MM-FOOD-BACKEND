@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { markMealBoxOrderDelivered } = require('../controllers/mealBox.controller');
+const { markMealBoxOrderDelivered, getMealBoxOrderTracking } = require('../controllers/mealBox.controller');
 // PUT /api/mealbox/tracking/:id/delivered - mark mealbox order as delivered
 router.put('/tracking/:id/delivered', markMealBoxOrderDelivered);
 const auth = require('../middlewares/auth');
@@ -57,5 +57,7 @@ router.post('/', auth, upload.fields([{ name: 'boxImage' }, { name: 'actualImage
 router.get('/', getMealBoxes);
 // GET /api/mealbox/tracking - track confirmed mealbox orders for logged-in vendor
 router.get('/tracking', auth, getConfirmedMealBoxOrdersWithTracking);
+// GET /api/mealbox/tracking/:id - track a specific mealbox order
+router.get('/tracking/:id', auth, getMealBoxOrderTracking);
 
 module.exports = router;

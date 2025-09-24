@@ -1,3 +1,33 @@
+// Get tracking info for a specific mealbox order by ID
+exports.getMealBoxOrderTracking = async (req, res) => {
+	try {
+		const MealBoxOrder = require('../models/MealBoxOrder');
+		const order = await MealBoxOrder.findById(req.params.id);
+		if (!order) {
+			return res.status(404).json({ success: false, message: 'Order not found' });
+		}
+		res.status(200).json({
+			success: true,
+			order: {
+				_id: order._id,
+				customerName: order.customerName,
+				customerEmail: order.customerEmail,
+				customerMobile: order.customerMobile,
+				mealBox: order.mealBox,
+				quantity: order.quantity,
+				vendor: order.vendor,
+				type: order.type,
+				status: order.status,
+				deliveryTime: order.deliveryTime || null,
+				deliveryDate: order.deliveryDate || null,
+				createdAt: order.createdAt,
+				updatedAt: order.updatedAt
+			}
+		});
+	} catch (error) {
+		res.status(500).json({ success: false, message: error.message });
+	}
+};
 // Mark mealbox order as delivered (tracking update)
 exports.markMealBoxOrderDelivered = async (req, res) => {
 	try {
