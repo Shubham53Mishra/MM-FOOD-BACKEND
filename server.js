@@ -35,6 +35,13 @@ const io = new Server(http, {
 	pingTimeout: 60000   // 60 seconds
 });
 
+// Helper to fetch all orders and emit to all clients
+const emitAllOrders = async () => {
+  const Order = require('./models/Order');
+  const orders = await Order.find().populate('items.category items.subCategory vendor');
+  io.emit('ordersUpdated', orders);
+};
+
 
 // Example: emit after updating meal order (modify as per your real update logic)
 const updateMealOrder = (updatedOrderData) => {
@@ -62,6 +69,13 @@ io.on('connection', (socket) => {
 		updateMealOrder(data); // Broadcast to all clients!
 	});
 
+  // Client can request all orders for real-time sync
+  socket.on('getAllOrders', async () => {
+    const Order = require('./models/Order');
+    const orders = await Order.find().populate('items.category items.subCategory vendor');
+    socket.emit('ordersUpdated', orders);
+  });
+
 	socket.on('disconnect', () => {
 		console.log('Client disconnected:', socket.id);
 	});
@@ -69,6 +83,9 @@ io.on('connection', (socket) => {
 
 // Make io accessible in routes/controllers
 app.set('io', io);
+
+// Export emitAllOrders for use in routes
+module.exports.emitAllOrders = emitAllOrders;
 
 const PORT = process.env.PORT || 5000;
 http.listen(PORT, () => console.log(`🚀 Server running on port ${PORT} (WebSocket enabled)`));
