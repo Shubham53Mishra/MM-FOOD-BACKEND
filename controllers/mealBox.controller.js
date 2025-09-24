@@ -474,13 +474,22 @@ exports.updateMealBox = async (req, res) => {
 		// Build update object from allowed fields
 		const allowedFields = [
 			'title', 'description', 'minQty', 'price', 'prepareOrderDays',
-			'sampleAvailable', 'items', 'packagingDetails', 'boxImage', 'actualImage', 'vendor'
+			'sampleAvailable', 'items', 'packagingDetails', 'vendor'
 		];
 		const updateData = {};
 		for (const field of allowedFields) {
 			if (Object.prototype.hasOwnProperty.call(req.body, field) && req.body[field] !== undefined) {
 				updateData[field] = req.body[field];
 			}
+		}
+
+		// Parse minQty and price as numbers if present
+		if (updateData.minQty !== undefined) updateData.minQty = Number(updateData.minQty);
+		if (updateData.price !== undefined) updateData.price = Number(updateData.price);
+
+		// Parse sampleAvailable as boolean if present
+		if (updateData.sampleAvailable !== undefined) {
+			updateData.sampleAvailable = (updateData.sampleAvailable === 'true' || updateData.sampleAvailable === true);
 		}
 
 		// If items is a string, try to parse it as JSON or comma-separated
@@ -490,6 +499,19 @@ exports.updateMealBox = async (req, res) => {
 			} catch {
 				updateData.items = updateData.items.split(',').map(i => i.trim());
 			}
+		}
+
+		// Handle file uploads for boxImage and actualImage
+		const cloudinaryUpload = async (file) => {
+			if (!file) return null;
+			const result = await cloudinary.uploader.upload(file.path, { folder: 'mealbox' });
+			return result.secure_url;
+		};
+		if (req.files && req.files.boxImage && req.files.boxImage[0]) {
+			updateData.boxImage = await cloudinaryUpload(req.files.boxImage[0]);
+		}
+		if (req.files && req.files.actualImage && req.files.actualImage[0]) {
+			updateData.actualImage = await cloudinaryUpload(req.files.actualImage[0]);
 		}
 
 		// If no fields to update, return error
@@ -508,7 +530,16 @@ exports.updateMealBox = async (req, res) => {
 			return res.status(404).json({ success: false, message: 'MealBox not found.' });
 		}
 
-		res.status(200).json({ success: true, message: 'MealBox updated successfully.', mealBox: updatedMealBox });
+		// Always return the latest boxImage and actualImage URLs
+		const responseMealBox = updatedMealBox.toObject();
+		if (updateData.boxImage) responseMealBox.boxImage = updateData.boxImage;
+		if (updateData.actualImage) responseMealBox.actualImage = updateData.actualImage;
+
+		res.status(200).json({
+			success: true,
+			message: 'MealBox updated successfully.',
+			mealBox: responseMealBox
+		});
 	} catch (error) {
 		res.status(500).json({ success: false, message: error.message });
 	}
