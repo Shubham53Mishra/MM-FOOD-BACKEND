@@ -120,20 +120,31 @@ exports.confirmOrder = async (req, res) => {
 	try {
 		const orderId = req.params.id;
 		const { deliveryTime, deliveryDate } = req.body;
-		if (!orderId) {
-			return res.status(400).json({ success: false, message: 'Order ID required.' });
-		}
-		const Order = require('../models/Order');
-		const order = await Order.findById(orderId);
-		if (!order) {
-			return res.status(404).json({ success: false, message: 'Order not found.' });
-		}
-		if (order.status !== 'pending') {
-			return res.status(400).json({ success: false, message: 'Order cannot be confirmed. Status is not pending.' });
-		}
-		// Set delivery time and date (Indian time)
-		   if (req.body.deliveryTime !== undefined) order.deliveryTime = String(req.body.deliveryTime);
-		   if (req.body.deliveryDate !== undefined) order.deliveryDate = String(req.body.deliveryDate);
+		   console.log('[CONFIRM] Vendor confirmation attempt:', req.user ? req.user._id : null, 'OrderId:', orderId);
+		   if (!orderId) {
+			   console.log('[CONFIRM] No orderId provided');
+			   return res.status(400).json({ success: false, message: 'Order ID required.' });
+		   }
+		   const Order = require('../models/Order');
+		   const order = await Order.findById(orderId);
+		   if (!order) {
+			   console.log('[CONFIRM] Order not found:', orderId);
+			   return res.status(404).json({ success: false, message: 'Order not found.' });
+		   }
+		   console.log('[CONFIRM] Order found:', order._id, 'Current status:', order.status);
+		   if (order.status !== 'pending') {
+			   console.log('[CONFIRM] Order cannot be confirmed. Status is not pending:', order.status);
+			   return res.status(400).json({ success: false, message: 'Order cannot be confirmed. Status is not pending.' });
+		   }
+		   // Set delivery time and date (Indian time)
+		   if (req.body.deliveryTime !== undefined) {
+			   order.deliveryTime = String(req.body.deliveryTime);
+			   console.log('[CONFIRM] Set deliveryTime:', order.deliveryTime);
+		   }
+		   if (req.body.deliveryDate !== undefined) {
+			   order.deliveryDate = String(req.body.deliveryDate);
+			   console.log('[CONFIRM] Set deliveryDate:', order.deliveryDate);
+		   }
 		   order.markModified('deliveryTime');
 		   order.markModified('deliveryDate');
 		   order.status = 'confirmed';
