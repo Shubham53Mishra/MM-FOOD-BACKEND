@@ -51,10 +51,16 @@ const updateMealOrder = (updatedOrderData) => {
 
 
 const updateOrder = (order, action) => {
-	if (!order || !order.vendor) return;
-	const vendorRoom = order.vendor.toString();
-	io.to(vendorRoom).emit('orderUpdated', { action, order });
-	console.log(`[SOCKET] Emitting orderUpdated:${action} to vendor room`, vendorRoom, order._id);
+	if (!order) return;
+	// Emit to vendor room (for vendor dashboard)
+	if (order.vendor) {
+		const vendorRoom = order.vendor.toString();
+		io.to(vendorRoom).emit('orderUpdated', { action, order });
+		console.log(`[SOCKET] Emitting orderUpdated:${action} to vendor room`, vendorRoom, order._id);
+	}
+	// Emit to order-specific room (for tracking)
+	io.to(`order_${order._id}`).emit('orderTrackingUpdated', { action, order });
+	console.log(`[SOCKET] Emitting orderTrackingUpdated:${action} to order room`, `order_${order._id}`);
 };
 
 // Export updateOrder for use in controllers
@@ -63,18 +69,24 @@ module.exports.updateOrder = updateOrder;
 io.on('connection', (socket) => {
 	console.log('Client connected:', socket.id);
 
+	// Join order-specific room for tracking
+	socket.on('joinOrderRoom', (orderId) => {
+		socket.join(`order_${orderId}`);
+		console.log(`Socket ${socket.id} joined order room: order_${orderId}`);
+	});
+
 	// Sample: On admin confirms order, broadcast update
 	socket.on('orderConfirmed', (data) => {
 		// Update DB, etc...
 		updateMealOrder(data); // Broadcast to all clients!
 	});
 
-  // Client can request all orders for real-time sync
-  socket.on('getAllOrders', async () => {
-    const Order = require('./models/Order');
-    const orders = await Order.find().populate('items.category items.subCategory vendor');
-    socket.emit('ordersUpdated', orders);
-  });
+	// Client can request all orders for real-time sync
+	socket.on('getAllOrders', async () => {
+		const Order = require('./models/Order');
+		const orders = await Order.find().populate('items.category items.subCategory vendor');
+		socket.emit('ordersUpdated', orders);
+	});
 
 	socket.on('disconnect', () => {
 		console.log('Client disconnected:', socket.id);
