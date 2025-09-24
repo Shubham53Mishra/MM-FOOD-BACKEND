@@ -15,7 +15,10 @@ exports.markOrderDelivered = async (req, res) => {
 			await order.save();
 			// Emit socket event for real-time update
 			const io = req.app && req.app.get('io');
-			if (io) io.emit('orderUpdated', { action: 'delivered', order });
+			if (io) {
+				console.log('[SOCKET] Emitting orderUpdated: delivered', order._id);
+				io.emit('orderUpdated', { action: 'delivered', order });
+			}
 			res.status(200).json({
 				success: true,
 				message: 'Order marked as delivered',
@@ -138,7 +141,10 @@ exports.confirmOrder = async (req, res) => {
 
 		// Emit socket event for real-time update
 		const io = req.app && req.app.get('io');
-		if (io) io.emit('orderUpdated', { action: 'confirmed', order });
+		if (io) {
+			console.log('[SOCKET] Emitting orderUpdated: confirmed', order._id);
+			io.emit('orderUpdated', { action: 'confirmed', order });
+		}
 
 		res.status(200).json({
 			success: true,
