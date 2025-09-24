@@ -1,3 +1,9 @@
+// Emit mealbox order tracking update to order-specific room
+const updateMealBoxOrderTracking = (order, action) => {
+	if (!order) return;
+	io.to(`mealbox_order_${order._id}`).emit('mealboxOrderTrackingUpdated', { action, order });
+	console.log(`[SOCKET] Emitting mealboxOrderTrackingUpdated:${action} to mealbox_order_${order._id}`);
+};
 // Use custom .env file path if needed
 require('dotenv').config({ path: './.env' });
 const express = require('express');
@@ -67,6 +73,11 @@ const updateOrder = (order, action) => {
 module.exports.updateOrder = updateOrder;
 // Socket.io connection
 io.on('connection', (socket) => {
+	// Join mealbox order-specific room for tracking
+	socket.on('joinMealBoxOrderRoom', (orderId) => {
+		socket.join(`mealbox_order_${orderId}`);
+		console.log(`Socket ${socket.id} joined mealbox order room: mealbox_order_${orderId}`);
+	});
 	console.log('Client connected:', socket.id);
 
 	// Join order-specific room for tracking
@@ -99,5 +110,19 @@ app.set('io', io);
 // Export emitAllOrders for use in routes
 module.exports.emitAllOrders = emitAllOrders;
 
+
 const PORT = process.env.PORT || 5000;
-http.listen(PORT, () => console.log(`🚀 Server running on port ${PORT} (WebSocket enabled)`));
+http.listen(PORT)
+	.on('error', (err) => {
+		if (err.code === 'EADDRINUSE') {
+			console.error(`Port ${PORT} in use, trying next port...`);
+			http.listen(0); // 0 means random free port
+		} else {
+			throw err;
+		}
+	})
+	.on('listening', () => {
+		const address = http.address();
+		const actualPort = typeof address === 'string' ? address : address.port;
+		console.log(`🚀 Server running on port ${actualPort} (WebSocket enabled)`);
+	});
