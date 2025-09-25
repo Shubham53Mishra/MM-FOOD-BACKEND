@@ -74,14 +74,20 @@ const updateOrder = (order, action) => {
 
 // Export updateOrder for use in controllers
 module.exports.updateOrder = updateOrder;
-// Socket.io connection
+// Socket.io connection with event logging for debugging
 io.on('connection', (socket) => {
+	console.log('Client connected:', socket.id);
+
+	// Log all socket events for debugging
+	socket.onAny((event, ...args) => {
+		console.log(`[SOCKET EVENT] ${event}:`, args);
+	});
+
 	// Join mealbox order-specific room for tracking
 	socket.on('joinMealBoxOrderRoom', (orderId) => {
 		socket.join(`mealbox_order_${orderId}`);
 		console.log(`Socket ${socket.id} joined mealbox order room: mealbox_order_${orderId}`);
 	});
-	console.log('Client connected:', socket.id);
 
 	// Join order-specific room for tracking
 	socket.on('joinOrderRoom', (orderId) => {
