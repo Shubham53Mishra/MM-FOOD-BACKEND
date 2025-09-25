@@ -366,6 +366,17 @@ router.post('/add-subcategory', auth, upload.single('image'), async (req, res) =
     return res.status(400).json({ message: "Sub-category name and categoryId are required" });
   }
   let imageUrl = "";
+  const emitCategoriesUpdated = async () => {
+    try {
+      const { io } = require('../server');
+      if (io) {
+        // Optionally, you can send the updated categories list here
+        io.emit('categoriesUpdated', { message: 'Categories or subcategories updated' });
+      }
+    } catch (e) {
+      console.error('Socket emit categoriesUpdated failed:', e);
+    }
+  };
   if (req.file) {
     try {
       cloudinary.uploader.upload_stream(
@@ -387,6 +398,7 @@ router.post('/add-subcategory', auth, upload.single('image'), async (req, res) =
             discountEnd
           });
           await subCategory.save();
+          await emitCategoriesUpdated();
           res.status(201).json({ message: "Sub-category added", subCategory });
         }
       ).end(req.file.buffer);
@@ -408,6 +420,7 @@ router.post('/add-subcategory', auth, upload.single('image'), async (req, res) =
         discountEnd
       });
       await subCategory.save();
+      await emitCategoriesUpdated();
       res.status(201).json({ message: "Sub-category added", subCategory });
     } catch (err) {
       res.status(500).json({ message: "Error saving sub-category", error: err.message });
