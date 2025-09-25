@@ -300,7 +300,7 @@ exports.getMyMealBoxes = async (req, res) => {
 	}
 };
 
-// Confirm a mealbox order (vendor only)
+// Confirm a mealbox order (vendor only, emits socket event, returns updated order)
 exports.confirmMealBoxOrder = async (req, res) => {
 	try {
 		const orderId = req.params.orderId;
@@ -315,10 +315,11 @@ exports.confirmMealBoxOrder = async (req, res) => {
 		if (!order) {
 			return res.status(404).json({ success: false, message: 'Order not found' });
 		}
+		// Allow if vendor matches either order.vendor or mealBox.vendor
 		const orderVendorId = String(order.vendor && order.vendor._id ? order.vendor._id : order.vendor);
 		const mealBoxVendorId = String(order.mealBox && order.mealBox.vendor ? order.mealBox.vendor : '');
 		const tokenVendorId = String(vendorId);
-		if (orderVendorId !== tokenVendorId || mealBoxVendorId !== tokenVendorId) {
+		if (orderVendorId !== tokenVendorId && mealBoxVendorId !== tokenVendorId) {
 			return res.status(403).json({ success: false, message: 'Unauthorized: You can only confirm your own mealbox orders.' });
 		}
 		// Allow updating deliveryTime and deliveryDate even if already confirmed
@@ -328,7 +329,9 @@ exports.confirmMealBoxOrder = async (req, res) => {
 		order.deliveryTime = req.body.deliveryTime !== undefined ? String(req.body.deliveryTime) : order.deliveryTime || null;
 		order.deliveryDate = req.body.deliveryDate !== undefined ? String(req.body.deliveryDate) : order.deliveryDate || null;
 		await order.save();
-		// Return a consistent response structure
+		// Emit socket event for real-time update (all clients tracking this mealbox order)
+		const { updateMealBoxOrderTracking } = require('../server');
+		updateMealBoxOrderTracking(order, 'confirmed');
 		res.status(200).json({
 			success: true,
 			message: 'Order confirmed',
