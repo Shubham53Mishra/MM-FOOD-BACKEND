@@ -145,29 +145,34 @@ exports.confirmOrder = async (req, res) => {
 			   order.deliveryDate = String(req.body.deliveryDate);
 			   console.log('[CONFIRM] Set deliveryDate:', order.deliveryDate);
 		   }
-		   order.markModified('deliveryTime');
-		   order.markModified('deliveryDate');
-		   order.status = 'confirmed';
-		   console.log('[ORDER STATUS] Status set to CONFIRMED for order:', order._id);
-		   await order.save();
-		   console.log('[ORDER UPDATE] Order confirmed:', order._id, order.status, order.updatedAt);
-		   // Emit socket event for real-time update
-		   const { updateOrder } = require('../server');
-		   updateOrder(order, 'confirmed');
-		   res.status(200).json({
-			   success: true,
-			   message: 'Order confirmed',
-			   order: {
-				   _id: order._id,
-				   customerName: order.customerName,
-				   customerEmail: order.customerEmail,
-				   customerMobile: order.customerMobile,
-				   items: order.items,
-				   vendor: order.vendor,
-				   status: order.status,
-				   orderId: order.orderId,
-				   createdAt: order.createdAt,
-				   updatedAt: order.updatedAt,
+				   order.markModified('deliveryTime');
+				   order.markModified('deliveryDate');
+				   order.status = 'confirmed';
+				   console.log('[ORDER STATUS] Status set to CONFIRMED for order:', order._id);
+				   await order.save();
+				   console.log('[ORDER UPDATE] Order confirmed:', order._id, order.status, order.updatedAt);
+				   // Emit socket event for real-time update (ALWAYS emit after save)
+				   try {
+					   const { updateOrder } = require('../server');
+					   updateOrder(order, 'confirmed');
+					   console.log('[SOCKET] Emitting orderTrackingUpdated:confirmed to order room', `order_${order._id}`);
+				   } catch (e) {
+					   console.error('[SOCKET] Failed to emit orderTrackingUpdated:', e);
+				   }
+				   res.status(200).json({
+					   success: true,
+					   message: 'Order confirmed',
+					   order: {
+						   _id: order._id,
+						   customerName: order.customerName,
+						   customerEmail: order.customerEmail,
+						   customerMobile: order.customerMobile,
+						   items: order.items,
+						   vendor: order.vendor,
+						   status: order.status,
+						   orderId: order.orderId,
+						   createdAt: order.createdAt,
+						   updatedAt: order.updatedAt,
 				   deliveryTime: order.deliveryTime,
 				   deliveryDate: order.deliveryDate
 			   }
