@@ -1,47 +1,69 @@
 // Create a simple (sample) meal box order with minimal fields
 exports.createSimpleMealBoxOrder = async (req, res) => {
-		try {
-			const { mealBoxId, quantity } = req.body;
-			if (!mealBoxId || !quantity) {
-				return res.status(400).json({ success: false, message: 'mealBoxId and quantity are required.' });
+			try {
+				const { mealBoxId, quantity, deliveryDays: reqDeliveryDays, deliveryDate: reqDeliveryDate } = req.body;
+				if (!mealBoxId || !quantity) {
+					return res.status(400).json({ success: false, message: 'mealBoxId and quantity are required.' });
+				}
+				const mealBox = await require('../models/MealBox').findById(mealBoxId);
+				if (!mealBox) {
+					return res.status(404).json({ success: false, message: 'MealBox not found.' });
+				}
+				if (!mealBox.sampleAvailable) {
+					return res.status(400).json({ success: false, message: 'This meal box is not a sample/simple product.' });
+				}
+				// Get user info from token (auth middleware)
+				const customerName = req.user && req.user.name;
+				const customerEmail = req.user && req.user.email;
+				const customerMobile = req.user && req.user.mobile;
+				// Allow user to send deliveryDays or deliveryDate, fallback to minPrepareOrderDays
+				let deliveryDays = null;
+				let deliveryDate = null;
+				if (typeof reqDeliveryDays === 'number' && !isNaN(reqDeliveryDays)) {
+					deliveryDays = reqDeliveryDays;
+				} else if (reqDeliveryDate) {
+					// If deliveryDate is sent, calculate deliveryDays from today
+					const today = new Date();
+					const userDate = new Date(reqDeliveryDate);
+					if (isNaN(userDate.getTime())) {
+						return res.status(400).json({ success: false, message: 'Invalid deliveryDate format.' });
+					}
+					const diffTime = userDate.getTime() - today.getTime();
+					deliveryDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+				} else if (typeof mealBox.minPrepareOrderDays === 'number' && !isNaN(mealBox.minPrepareOrderDays)) {
+					deliveryDays = mealBox.minPrepareOrderDays;
+				} else {
+					deliveryDays = 1;
+				}
+				// Calculate deliveryDate from deliveryDays
+				const today = new Date();
+				deliveryDate = new Date(today.getTime() + deliveryDays * 24 * 60 * 60 * 1000);
+				if (isNaN(deliveryDate.getTime())) {
+					return res.status(400).json({ success: false, message: 'Invalid time value for deliveryDate.' });
+				}
+				deliveryDate = deliveryDate.toISOString().slice(0,10);
+				// Save MealBoxOrder to DB
+				const mealBoxOrder = new (require('../models/MealBoxOrder'))({
+					customerName,
+					customerEmail,
+					customerMobile,
+					mealBox: mealBox._id,
+					quantity,
+					vendor: mealBox.vendor,
+					status: 'pending',
+					deliveryDays,
+					deliveryDate,
+					isSampleOrder: true
+				});
+				await mealBoxOrder.save();
+				res.status(201).json({
+					success: true,
+					message: 'Simple meal box order created',
+					mealBoxOrder
+				});
+			} catch (error) {
+				res.status(500).json({ success: false, message: error.message });
 			}
-			const mealBox = await require('../models/MealBox').findById(mealBoxId);
-			if (!mealBox) {
-				return res.status(404).json({ success: false, message: 'MealBox not found.' });
-			}
-			if (!mealBox.sampleAvailable) {
-				return res.status(400).json({ success: false, message: 'This meal box is not a sample/simple product.' });
-			}
-			// Get user info from token (auth middleware)
-			const customerName = req.user && req.user.name;
-			const customerEmail = req.user && req.user.email;
-			const customerMobile = req.user && req.user.mobile;
-			// Use minPrepareOrderDays as default deliveryDays
-			const deliveryDays = mealBox.minPrepareOrderDays;
-			const today = new Date();
-			const deliveryDate = new Date(today.getTime() + deliveryDays * 24 * 60 * 60 * 1000).toISOString().slice(0,10);
-			// Save MealBoxOrder to DB
-			const mealBoxOrder = new (require('../models/MealBoxOrder'))({
-				customerName,
-				customerEmail,
-				customerMobile,
-				mealBox: mealBox._id,
-				quantity,
-				vendor: mealBox.vendor,
-				status: 'pending',
-				deliveryDays,
-				deliveryDate,
-				isSampleOrder: true
-			});
-			await mealBoxOrder.save();
-			res.status(201).json({
-				success: true,
-				message: 'Simple meal box order created',
-				mealBoxOrder
-			});
-		} catch (error) {
-			res.status(500).json({ success: false, message: error.message });
-		}
 };
 // Get all meal boxes with sampleAvailable: true
 exports.getSampleMealBoxes = async (req, res) => {
