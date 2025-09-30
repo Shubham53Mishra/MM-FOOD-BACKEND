@@ -1,3 +1,5 @@
+// GET /api/mealbox/samples - get all meal boxes with sampleAvailable: true
+router.get('/samples', mealBoxController.getSampleMealBoxes);
 const express = require('express');
 const router = express.Router();
 const { markMealBoxOrderDelivered, getMealBoxOrderTracking } = require('../controllers/mealBox.controller');

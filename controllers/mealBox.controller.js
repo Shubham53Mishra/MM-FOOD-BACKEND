@@ -1,3 +1,13 @@
+// Get all meal boxes with sampleAvailable: true
+exports.getSampleMealBoxes = async (req, res) => {
+	try {
+		const MealBox = require('../models/MealBox');
+		const boxes = await MealBox.find({ sampleAvailable: true });
+		res.status(200).json({ success: true, mealBoxes: boxes });
+	} catch (error) {
+		res.status(500).json({ success: false, message: error.message });
+	}
+};
 // Get tracking info for a specific mealbox order by ID
 exports.getMealBoxOrderTracking = async (req, res) => {
 	try {
