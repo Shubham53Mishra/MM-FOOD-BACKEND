@@ -482,26 +482,13 @@ exports.createMealBox = async (req, res) => {
 		// Accept vendor from auth
 		const vendor = req.user && req.user._id;
 		// Validate required fields (prepareOrderDays required, deliveryDate removed)
-		if (!title || !minQty || !price || !prepareOrderDays || !vendor || !items || !packagingDetails || !(req.files && req.files.boxImage && req.files.actualImage)) {
-			return res.status(400).json({
-				success: false,
-				message: 'Missing required fields. Make sure you are sending all fields as form-data and images as files.',
-				received: {
-					title,
-					description,
-					minQty,
-					price,
-					prepareOrderDays,
-					sampleAvailable,
-					items,
-					packagingDetails,
-					boxImage: req.files && req.files.boxImage,
-					actualImage: req.files && req.files.actualImage,
-					vendor
-				}
-			});
-		}
-		// No deliveryDate calculation, just use prepareOrderDays
+			if (!(req.files && req.files.boxImage && req.files.actualImage) || !vendor) {
+				return res.status(400).json({
+					success: false,
+					message: 'Missing required images or vendor. Make sure you are sending images as files and vendor is set.',
+					received: req.body
+				});
+			}
 		// Ensure items is always an array of ObjectIds
 		let itemsArr = items;
 		if (typeof itemsArr === 'string') {
