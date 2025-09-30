@@ -46,40 +46,36 @@ router.post('/create', auth, async (req, res) => {
       } else {
         item.discountedPrice = subCategoryExists.pricePerUnit;
       }
-      // Show delivery days as string
-      // Show deliveryDays as a number (selected or default)
-      if (item.deliveryDate) {
-        // If user selected a date, calculate days from today
-        const today = new Date();
+      // Support deliveryDays (number of days from today) in request
+      const today = new Date();
+      let deliveryDays = null;
+      if (typeof item.deliveryDays === 'number' && subCategoryExists.minDeliveryDays && subCategoryExists.maxDeliveryDays) {
+        // If user provides deliveryDays, validate it
+        if (
+          item.deliveryDays < subCategoryExists.minDeliveryDays ||
+          item.deliveryDays > subCategoryExists.maxDeliveryDays
+        ) {
+          return res.status(400).json({ message: `deliveryDays for item must be between ${subCategoryExists.minDeliveryDays} and ${subCategoryExists.maxDeliveryDays}` });
+        }
+        deliveryDays = item.deliveryDays;
+      } else if (item.deliveryDate) {
+        // If user provides deliveryDate, calculate deliveryDays
         const userDate = new Date(item.deliveryDate);
         const diffTime = userDate.getTime() - today.getTime();
         const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-        item.deliveryDays = diffDays;
+        deliveryDays = diffDays;
       } else if (subCategoryExists.minDeliveryDays) {
-        item.deliveryDays = subCategoryExists.minDeliveryDays;
-      } else {
-        item.deliveryDays = null;
+        deliveryDays = subCategoryExists.minDeliveryDays;
       }
 
-      // Validate and set user-selected deliveryDate (optional)
-      if (item.deliveryDate) {
-        const today = new Date();
-        const minDate = subCategoryExists.minDeliveryDays ? new Date(today.getTime() + subCategoryExists.minDeliveryDays * 24 * 60 * 60 * 1000) : today;
-        const maxDate = subCategoryExists.maxDeliveryDays ? new Date(today.getTime() + subCategoryExists.maxDeliveryDays * 24 * 60 * 60 * 1000) : null;
-        const userDate = new Date(item.deliveryDate);
-        if (userDate < minDate || (maxDate && userDate > maxDate)) {
-          return res.status(400).json({ message: `deliveryDate for item must be between ${minDate.toISOString().slice(0,10)} and ${maxDate ? maxDate.toISOString().slice(0,10) : 'no max'}` });
-        }
-        item.selectedDeliveryDate = item.deliveryDate;
+      item.deliveryDays = deliveryDays;
+
+      // Calculate selectedDeliveryDate from deliveryDays
+      if (deliveryDays !== null) {
+        const selectedDate = new Date(today.getTime() + deliveryDays * 24 * 60 * 60 * 1000);
+        item.selectedDeliveryDate = selectedDate.toISOString().slice(0,10);
       } else {
-        // Default: set to min delivery date if not provided
-        if (subCategoryExists.minDeliveryDays) {
-          const today = new Date();
-          const minDate = new Date(today.getTime() + subCategoryExists.minDeliveryDays * 24 * 60 * 60 * 1000);
-          item.selectedDeliveryDate = minDate.toISOString().slice(0,10);
-        } else {
-          item.selectedDeliveryDate = null;
-        }
+        item.selectedDeliveryDate = null;
       }
     }
   }
@@ -112,7 +108,14 @@ router.post('/create', auth, async (req, res) => {
     // Emit ordersUpdated event (real-time update)
     const { emitAllOrders } = require('../server');
     await emitAllOrders();
-  res.status(201).json({ message: "Order placed", order });
+    // Ensure selectedDeliveryDate and deliveryDays are included in each item in the response
+    const orderObj = order.toObject();
+    orderObj.items = orderObj.items.map(item => ({
+      ...item,
+      selectedDeliveryDate: item.selectedDeliveryDate,
+      deliveryDays: item.deliveryDays
+    }));
+    res.status(201).json({ message: "Order placed", order: orderObj });
   } catch (err) {
     res.status(500).json({ message: "Error placing order", error: err.message });
   }
