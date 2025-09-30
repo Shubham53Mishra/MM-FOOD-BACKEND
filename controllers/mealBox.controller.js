@@ -267,7 +267,8 @@ exports.createMealBoxOrder = async (req, res) => {
 			vendor: vendorId,
 			status: status || 'pending',
 			deliveryDays,
-			deliveryDate
+			deliveryDate,
+			isSampleOrder: mealBox.sampleAvailable === true
 		});
 		await mealBoxOrder.save();
 		// Emit socket event for real-time update

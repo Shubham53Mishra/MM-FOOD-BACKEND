@@ -13,7 +13,8 @@ const mealBoxOrderSchema = new mongoose.Schema({
   deliveryTime: { type: String },
   deliveryDate: { type: String },
   deliveryDays: { type: Number, default: null },
-  status: { type: String, default: 'pending' }
+  status: { type: String, default: 'pending' },
+  isSampleOrder: { type: Boolean, default: false }
 }, { timestamps: true });
 
 module.exports = mongoose.model('MealBoxOrder', mealBoxOrderSchema);
