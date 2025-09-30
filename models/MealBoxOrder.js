@@ -12,6 +12,7 @@ const mealBoxOrderSchema = new mongoose.Schema({
   deliveryAddress: { type: String },
   deliveryTime: { type: String },
   deliveryDate: { type: String },
+  deliveryDays: { type: Number, default: null },
   status: { type: String, default: 'pending' }
 }, { timestamps: true });
 

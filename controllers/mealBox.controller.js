@@ -146,9 +146,17 @@ exports.confirmMealBoxOrder = async (req, res) => {
 		if (order.status === 'pending') {
 			updateFields.status = 'confirmed';
 		}
-		// Always set deliveryTime and deliveryDate, even if null
-		updateFields.deliveryTime = req.body.deliveryTime !== undefined ? String(req.body.deliveryTime) : null;
-		updateFields.deliveryDate = req.body.deliveryDate !== undefined ? String(req.body.deliveryDate) : null;
+			// Support deliveryDays: if provided, calculate deliveryDate
+			if (typeof req.body.deliveryDays === 'number') {
+				const today = new Date();
+				const selectedDate = new Date(today.getTime() + req.body.deliveryDays * 24 * 60 * 60 * 1000);
+				updateFields.deliveryDays = req.body.deliveryDays;
+				updateFields.deliveryDate = selectedDate.toISOString().slice(0,10);
+			} else {
+				updateFields.deliveryDays = null;
+				updateFields.deliveryDate = req.body.deliveryDate !== undefined ? String(req.body.deliveryDate) : null;
+			}
+			updateFields.deliveryTime = req.body.deliveryTime !== undefined ? String(req.body.deliveryTime) : null;
 		console.log('DEBUG confirmMealBoxOrder:');
 		console.log('Request body:', req.body);
 		console.log('Update fields:', updateFields);
@@ -172,21 +180,22 @@ exports.confirmMealBoxOrder = async (req, res) => {
 		res.status(200).json({
 			success: true,
 			message: 'Order confirmed',
-		order: {
-			_id: updatedOrder._id,
-			customerName: updatedOrder.customerName,
-			customerEmail: updatedOrder.customerEmail,
-			customerMobile: updatedOrder.customerMobile,
-			mealBox: updatedOrder.mealBox,
-			quantity: updatedOrder.quantity,
-			vendor: updatedOrder.vendor,
-			type: updatedOrder.type,
-			status: updatedOrder.status,
-			deliveryTime: updatedOrder.deliveryTime || null,
-			deliveryDate: updatedOrder.deliveryDate || null,
-			createdAt: updatedOrder.createdAt,
-			updatedAt: updatedOrder.updatedAt
-		}
+				order: {
+					_id: updatedOrder._id,
+					customerName: updatedOrder.customerName,
+					customerEmail: updatedOrder.customerEmail,
+					customerMobile: updatedOrder.customerMobile,
+					mealBox: updatedOrder.mealBox,
+					quantity: updatedOrder.quantity,
+					vendor: updatedOrder.vendor,
+					type: updatedOrder.type,
+					status: updatedOrder.status,
+					deliveryTime: updatedOrder.deliveryTime || null,
+					deliveryDate: updatedOrder.deliveryDate || null,
+					deliveryDays: updatedOrder.deliveryDays,
+					createdAt: updatedOrder.createdAt,
+					updatedAt: updatedOrder.updatedAt
+				}
 		});
 	} catch (error) {
 		res.status(500).json({ success: false, message: error.message });
