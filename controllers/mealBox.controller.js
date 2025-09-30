@@ -482,13 +482,13 @@ exports.createMealBox = async (req, res) => {
 		// Accept vendor from auth
 		const vendor = req.user && req.user._id;
 		// Validate required fields (prepareOrderDays required, deliveryDate removed)
-										if (!title || !description || !minQty || !price || !req.body.minPrepareOrderDays || !req.body.maxPrepareOrderDays || !packagingDetails || typeof sampleAvailable === 'undefined' || !items || !vendor) {
-											return res.status(400).json({
-												success: false,
-												message: 'Missing required fields. Make sure you are sending all fields as form-data.',
-												received: req.body
-											});
-										}
+											if (!title || !minQty || !price || !req.body.minPrepareOrderDays || !req.body.maxPrepareOrderDays || !packagingDetails || !items) {
+												return res.status(400).json({
+													success: false,
+													message: 'Missing required fields. Make sure you are sending all required fields as form-data.',
+													received: req.body
+												});
+											}
 		// Ensure items is always an array of ObjectIds
 		let itemsArr = items;
 		if (typeof itemsArr === 'string') {
@@ -502,20 +502,20 @@ exports.createMealBox = async (req, res) => {
 			itemsArr = [itemsArr];
 		}
 		// Create new MealBox
-		const mealBox = new MealBox({
-			title,
-			description,
-			minQty: Number(minQty),
-			price: Number(price),
-			minPrepareOrderDays: Number(req.body.minPrepareOrderDays),
-			maxPrepareOrderDays: Number(req.body.maxPrepareOrderDays),
-			packagingDetails,
-			sampleAvailable: sampleAvailable === 'true' || sampleAvailable === true,
-			boxImage: boxImageUrl,
-			actualImage: actualImageUrl,
-			vendor,
-			items: itemsArr
-		});
+			const mealBox = new MealBox({
+				title,
+				description,
+				minQty: Number(minQty),
+				price: Number(price),
+				minPrepareOrderDays: Number(req.body.minPrepareOrderDays),
+				maxPrepareOrderDays: Number(req.body.maxPrepareOrderDays),
+				packagingDetails,
+				sampleAvailable: typeof sampleAvailable === 'undefined' ? false : (sampleAvailable === 'true' || sampleAvailable === true),
+				boxImage: boxImageUrl,
+				actualImage: actualImageUrl,
+				vendor,
+				items: itemsArr
+			});
 		await mealBox.save();
 		// Build image URLs for response
 		const baseUrl = req.protocol + '://' + req.get('host');
