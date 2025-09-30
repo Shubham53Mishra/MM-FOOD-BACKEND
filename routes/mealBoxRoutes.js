@@ -23,8 +23,8 @@ const {
   getConfirmedMealBoxOrdersWithTracking
 } = mealBoxController;
 
-// POST /api/mealbox/simple-order - create a simple (sample) meal box order
-router.post('/simple-order', mealBoxController.createSimpleMealBoxOrder);
+// POST /api/mealbox/simple-order - create a simple (sample) meal box order (user token required)
+router.post('/simple-order', auth, mealBoxController.createSimpleMealBoxOrder);
 const { uploadCustomItemImage } = require('../controllers/upload.controller');
 
 // GET /api/mealbox/samples - get all meal boxes with sampleAvailable: true
