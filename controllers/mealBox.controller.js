@@ -235,6 +235,16 @@ exports.createMealBoxOrder = async (req, res) => {
 				vendorId = mealBox.vendor;
 			}
 		}
+		// Handle deliveryDays: if provided, validate and calculate deliveryDate
+		let deliveryDays = req.body.deliveryDays;
+		if (typeof deliveryDays !== 'number') {
+			deliveryDays = mealBox.minPrepareOrderDays;
+		}
+		if (deliveryDays < mealBox.minPrepareOrderDays || deliveryDays > mealBox.maxPrepareOrderDays) {
+			return res.status(400).json({ success: false, message: `deliveryDays must be between ${mealBox.minPrepareOrderDays} and ${mealBox.maxPrepareOrderDays}` });
+		}
+		const today = new Date();
+		const deliveryDate = new Date(today.getTime() + deliveryDays * 24 * 60 * 60 * 1000).toISOString().slice(0,10);
 		// Save MealBoxOrder to DB
 		const mealBoxOrder = new MealBoxOrder({
 			customerName,
@@ -245,11 +255,13 @@ exports.createMealBoxOrder = async (req, res) => {
 			deliveryAddress,
 			type: type || 'mealbox',
 			vendor: vendorId,
-			status: status || 'pending'
+			status: status || 'pending',
+			deliveryDays,
+			deliveryDate
 		});
 		await mealBoxOrder.save();
-        // Emit socket event for real-time update
-        const io = req.app.get('io');
+		// Emit socket event for real-time update
+		const io = req.app.get('io');
 		if (io) io.emit('mealboxOrderUpdated', { action: 'created', order: mealBoxOrder });
 		res.status(201).json({
 			success: true,
