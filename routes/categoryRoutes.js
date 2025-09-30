@@ -366,7 +366,7 @@ router.get('/all-with-subcategories', async (req, res) => {
 
 // Add a sub-category under a main category (e.g., Snacks -> Mexican)
 router.post('/add-subcategory', auth, upload.single('image'), async (req, res) => {
-  const { name, description, pricePerUnit, priceType, quantity, categoryId, discount, discountStart, discountEnd, minQty, deliveryPriceEnabled, deliveryPrice } = req.body;
+  const { name, description, pricePerUnit, priceType, quantity, categoryId, discount, discountStart, discountEnd, minQty, deliveryPriceEnabled, deliveryPrice, minDeliveryDays, maxDeliveryDays } = req.body;
   const vendorId = req.user && req.user.id ? req.user.id : null;
   if (!vendorId) {
     return res.status(401).json({ message: "Vendor authentication required" });
@@ -416,7 +416,9 @@ router.post('/add-subcategory', auth, upload.single('image'), async (req, res) =
             discountStart,
             discountEnd,
             deliveryPriceEnabled: deliveryEnabled,
-            deliveryPrice: deliveryPriceValue
+            deliveryPrice: deliveryPriceValue,
+            minDeliveryDays: minDeliveryDays ? Number(minDeliveryDays) : undefined,
+            maxDeliveryDays: maxDeliveryDays ? Number(maxDeliveryDays) : undefined
           });
           await subCategory.save();
           await emitCategoriesUpdated();
@@ -441,7 +443,9 @@ router.post('/add-subcategory', auth, upload.single('image'), async (req, res) =
         discountStart,
         discountEnd,
         deliveryPriceEnabled: deliveryEnabled,
-        deliveryPrice: deliveryPriceValue
+        deliveryPrice: deliveryPriceValue,
+  minDeliveryDays: minDeliveryDays ? Number(minDeliveryDays) : undefined,
+  maxDeliveryDays: maxDeliveryDays ? Number(maxDeliveryDays) : undefined
       });
       await subCategory.save();
       await emitCategoriesUpdated();
