@@ -21,7 +21,9 @@ const subCategorySchema = new mongoose.Schema({
   imageUrl: { type: String },
   category: { type: mongoose.Schema.Types.ObjectId, ref: 'Category', required: true },
   vendor: { type: mongoose.Schema.Types.ObjectId, ref: 'Vendor' },
-  available: { type: Boolean, default: true }
+  available: { type: Boolean, default: true },
+  deliveryPriceEnabled: { type: Boolean, default: false }, // true = delivery price required, false = free delivery
+  deliveryPrice: { type: Number, default: 0 } // price if deliveryPriceEnabled is true
 }, { timestamps: true });
 
 module.exports = mongoose.model('SubCategory', subCategorySchema);

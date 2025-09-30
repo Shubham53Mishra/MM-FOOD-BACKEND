@@ -366,13 +366,19 @@ router.get('/all-with-subcategories', async (req, res) => {
 
 // Add a sub-category under a main category (e.g., Snacks -> Mexican)
 router.post('/add-subcategory', auth, upload.single('image'), async (req, res) => {
-  const { name, description, pricePerUnit, priceType, quantity, categoryId, discount, discountStart, discountEnd, minQty } = req.body;
+  const { name, description, pricePerUnit, priceType, quantity, categoryId, discount, discountStart, discountEnd, minQty, deliveryPriceEnabled, deliveryPrice } = req.body;
   const vendorId = req.user && req.user.id ? req.user.id : null;
   if (!vendorId) {
     return res.status(401).json({ message: "Vendor authentication required" });
   }
   if (!name || !categoryId) {
     return res.status(400).json({ message: "Sub-category name and categoryId are required" });
+  }
+  // Delivery price logic
+  let deliveryEnabled = deliveryPriceEnabled === 'true' || deliveryPriceEnabled === true;
+  let deliveryPriceValue = deliveryEnabled ? Number(deliveryPrice) : 0;
+  if (deliveryEnabled && (!deliveryPrice || isNaN(deliveryPriceValue))) {
+    return res.status(400).json({ message: "deliveryPrice is required when deliveryPriceEnabled is true" });
   }
   if (priceType && !['unit', 'gram'].includes(priceType)) {
     return res.status(400).json({ message: "priceType must be 'unit' or 'gram'" });
@@ -408,7 +414,9 @@ router.post('/add-subcategory', auth, upload.single('image'), async (req, res) =
             vendor: vendorId,
             discount,
             discountStart,
-            discountEnd
+            discountEnd,
+            deliveryPriceEnabled: deliveryEnabled,
+            deliveryPrice: deliveryPriceValue
           });
           await subCategory.save();
           await emitCategoriesUpdated();
@@ -431,7 +439,9 @@ router.post('/add-subcategory', auth, upload.single('image'), async (req, res) =
         vendor: vendorId,
         discount,
         discountStart,
-        discountEnd
+        discountEnd,
+        deliveryPriceEnabled: deliveryEnabled,
+        deliveryPrice: deliveryPriceValue
       });
       await subCategory.save();
       await emitCategoriesUpdated();
