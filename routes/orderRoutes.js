@@ -33,7 +33,9 @@ router.post('/create', auth, async (req, res) => {
   }
 
   // Validate each item for subCategory existence, apply discount, and handle delivery date selection
+  const itemsWithDelivery = [];
   for (const item of items) {
+    let newItem = { ...item };
     if (item.subCategory) {
       const subCategoryExists = await SubCategory.findById(item.subCategory);
       if (!subCategoryExists) {
@@ -42,9 +44,9 @@ router.post('/create', auth, async (req, res) => {
       // Apply discount if present
       if (subCategoryExists.discount && subCategoryExists.pricePerUnit) {
         const discountAmount = (subCategoryExists.pricePerUnit * subCategoryExists.discount) / 100;
-        item.discountedPrice = subCategoryExists.pricePerUnit - discountAmount;
+        newItem.discountedPrice = subCategoryExists.pricePerUnit - discountAmount;
       } else {
-        item.discountedPrice = subCategoryExists.pricePerUnit;
+        newItem.discountedPrice = subCategoryExists.pricePerUnit;
       }
       // Support deliveryDays (number of days from today) in request
       const today = new Date();
@@ -68,16 +70,17 @@ router.post('/create', auth, async (req, res) => {
         deliveryDays = subCategoryExists.minDeliveryDays;
       }
 
-      item.deliveryDays = deliveryDays;
+      newItem.deliveryDays = deliveryDays;
 
       // Calculate selectedDeliveryDate from deliveryDays
       if (deliveryDays !== null) {
         const selectedDate = new Date(today.getTime() + deliveryDays * 24 * 60 * 60 * 1000);
-        item.selectedDeliveryDate = selectedDate.toISOString().slice(0,10);
+        newItem.selectedDeliveryDate = selectedDate.toISOString().slice(0,10);
       } else {
-        item.selectedDeliveryDate = null;
+        newItem.selectedDeliveryDate = null;
       }
     }
+    itemsWithDelivery.push(newItem);
   }
 
 
@@ -99,7 +102,7 @@ router.post('/create', auth, async (req, res) => {
       customerName,
       customerEmail,
       customerMobile,
-      items,
+      items: itemsWithDelivery,
       vendor: vendorId,
       mealBox,
       orderId: customOrderId
