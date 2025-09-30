@@ -12,7 +12,9 @@ const orderSchema = new mongoose.Schema({
       cost: { type: Number },
       category: { type: mongoose.Schema.Types.ObjectId, ref: 'Category' },
       subCategory: { type: mongoose.Schema.Types.ObjectId, ref: 'SubCategory' },
-      discountedPrice: { type: Number }
+      discountedPrice: { type: Number },
+      selectedDeliveryDate: { type: String, default: null },
+      deliveryDays: { type: Number, default: null }
     }
   ],
     deliveryTime: { type: String, default: null },
