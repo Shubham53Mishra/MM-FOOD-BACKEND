@@ -1,32 +1,32 @@
-// GET /api/mealbox/samples - get all meal boxes with sampleAvailable: true
-router.get('/samples', mealBoxController.getSampleMealBoxes);
+
 const express = require('express');
 const router = express.Router();
 const { markMealBoxOrderDelivered, getMealBoxOrderTracking } = require('../controllers/mealBox.controller');
-// PUT /api/mealbox/tracking/:id/delivered - mark mealbox order as delivered
-router.put('/tracking/:id/delivered', markMealBoxOrderDelivered);
 const auth = require('../middlewares/auth');
 const upload = require('../middlewares/upload');
 const mealBoxController = require('../controllers/mealBox.controller');
 console.log('mealBoxController:', mealBoxController); // DEBUG: See what is imported
 const {
-	cancelMealBoxOrder,
-	confirmMealBoxOrder,
-	favoriteMealBox,
-	unfavoriteMealBox,
-	getFavoriteMealBoxes,
-	createMealBoxOrder,
-	getMealBoxOrders,
-	getMyMealBoxes,
-	deleteMealBox,
-	updateMealBox,
-	createMealBox,
-	addMultipleCustomItemsToMealBox,
-	addCustomItemToMealBox,
-	getMealBoxes,
-	getConfirmedMealBoxOrdersWithTracking
+  cancelMealBoxOrder,
+  confirmMealBoxOrder,
+  favoriteMealBox,
+  unfavoriteMealBox,
+  getFavoriteMealBoxes,
+  createMealBoxOrder,
+  getMealBoxOrders,
+  getMyMealBoxes,
+  deleteMealBox,
+  updateMealBox,
+  createMealBox,
+  addMultipleCustomItemsToMealBox,
+  addCustomItemToMealBox,
+  getMealBoxes,
+  getConfirmedMealBoxOrdersWithTracking
 } = mealBoxController;
 const { uploadCustomItemImage } = require('../controllers/upload.controller');
+
+// GET /api/mealbox/samples - get all meal boxes with sampleAvailable: true
+router.get('/samples', mealBoxController.getSampleMealBoxes);
 
 // Cancel mealbox order
 router.put('/order/:orderId/cancel', auth, cancelMealBoxOrder);
