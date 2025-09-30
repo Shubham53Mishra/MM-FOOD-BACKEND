@@ -12,6 +12,7 @@ const mealBoxSchema = new mongoose.Schema({
 	packagingDetails: String,
 	boxImage: String,      // Cloudinary URL
 	actualImage: String,   // Cloudinary URL
+	fromDate: { type: String },
 	vendor: { type: mongoose.Schema.Types.ObjectId, ref: 'Vendor' },
 	favoritedBy: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }]
 }, { timestamps: true });
