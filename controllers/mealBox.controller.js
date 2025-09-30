@@ -482,13 +482,13 @@ exports.createMealBox = async (req, res) => {
 		// Accept vendor from auth
 		const vendor = req.user && req.user._id;
 		// Validate required fields (prepareOrderDays required, deliveryDate removed)
-						if (!title || !description || !minQty || !price || typeof req.body.minPrepareOrderDays === 'undefined' || !maxPrepareOrderDays || !packagingDetails || typeof sampleAvailable === 'undefined' || !items || !vendor || !(req.files && req.files.boxImage && req.files.actualImage)) {
-							return res.status(400).json({
-								success: false,
-								message: 'Missing required fields. Make sure you are sending all fields as form-data and images as files.',
-								received: req.body
-							});
-						}
+							if (!title || !description || !minQty || !price || !maxPrepareOrderDays || !packagingDetails || typeof sampleAvailable === 'undefined' || !items || !vendor || !(req.files && req.files.boxImage && req.files.actualImage)) {
+								return res.status(400).json({
+									success: false,
+									message: 'Missing required fields. Make sure you are sending all fields as form-data and images as files.',
+									received: req.body
+								});
+							}
 		// Ensure items is always an array of ObjectIds
 		let itemsArr = items;
 		if (typeof itemsArr === 'string') {
@@ -502,20 +502,20 @@ exports.createMealBox = async (req, res) => {
 			itemsArr = [itemsArr];
 		}
 		// Create new MealBox
-			const mealBox = new MealBox({
-				title,
-				description,
-				minQty: Number(minQty),
-				price: Number(price),
-				minPrepareOrderDays: typeof req.body.minPrepareOrderDays !== 'undefined' ? Number(req.body.minPrepareOrderDays) : 1,
-				maxPrepareOrderDays: typeof req.body.maxPrepareOrderDays !== 'undefined' ? Number(req.body.maxPrepareOrderDays) : 5,
-				packagingDetails,
-				sampleAvailable: sampleAvailable === 'true' || sampleAvailable === true,
-				boxImage: boxImageUrl,
-				actualImage: actualImageUrl,
-				vendor,
-				items: itemsArr
-			});
+				const mealBox = new MealBox({
+					title,
+					description,
+					minQty: Number(minQty),
+					price: Number(price),
+					minPrepareOrderDays: req.body.minPrepareOrderDays ? Number(req.body.minPrepareOrderDays) : 1,
+					maxPrepareOrderDays: req.body.maxPrepareOrderDays ? Number(req.body.maxPrepareOrderDays) : 5,
+					packagingDetails,
+					sampleAvailable: sampleAvailable === 'true' || sampleAvailable === true,
+					boxImage: boxImageUrl,
+					actualImage: actualImageUrl,
+					vendor,
+					items: itemsArr
+				});
 		await mealBox.save();
 		// Populate vendor details for response
 		const populatedMealBox = await MealBox.findById(mealBox._id).populate({ path: 'vendor', select: '_id name email mobile' });
