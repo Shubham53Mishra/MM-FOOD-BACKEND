@@ -32,7 +32,7 @@ router.post('/create', auth, async (req, res) => {
     return res.status(400).json({ message: "Missing required fields" });
   }
 
-  // Validate each item for subCategory existence, and apply discount and delivery days
+  // Validate each item for subCategory existence, and apply discount and delivery date range
   for (const item of items) {
     if (item.subCategory) {
       const subCategoryExists = await SubCategory.findById(item.subCategory);
@@ -46,9 +46,22 @@ router.post('/create', auth, async (req, res) => {
       } else {
         item.discountedPrice = subCategoryExists.pricePerUnit;
       }
-      // Add min/max delivery days from subcategory
-      item.minDeliveryDays = subCategoryExists.minDeliveryDays || null;
-      item.maxDeliveryDays = subCategoryExists.maxDeliveryDays || null;
+      // Calculate delivery date range
+      const today = new Date();
+      if (subCategoryExists.minDeliveryDays) {
+        const startDate = new Date(today);
+        startDate.setDate(today.getDate() + subCategoryExists.minDeliveryDays);
+        item.deliveryStartDate = startDate.toISOString().slice(0, 10);
+      } else {
+        item.deliveryStartDate = null;
+      }
+      if (subCategoryExists.maxDeliveryDays) {
+        const endDate = new Date(today);
+        endDate.setDate(today.getDate() + subCategoryExists.maxDeliveryDays);
+        item.deliveryEndDate = endDate.toISOString().slice(0, 10);
+      } else {
+        item.deliveryEndDate = null;
+      }
     }
   }
 
