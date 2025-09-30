@@ -32,7 +32,7 @@ router.post('/create', auth, async (req, res) => {
     return res.status(400).json({ message: "Missing required fields" });
   }
 
-  // Validate each item for subCategory existence, and apply discount
+  // Validate each item for subCategory existence, and apply discount and delivery days
   for (const item of items) {
     if (item.subCategory) {
       const subCategoryExists = await SubCategory.findById(item.subCategory);
@@ -46,6 +46,9 @@ router.post('/create', auth, async (req, res) => {
       } else {
         item.discountedPrice = subCategoryExists.pricePerUnit;
       }
+      // Add min/max delivery days from subcategory
+      item.minDeliveryDays = subCategoryExists.minDeliveryDays || null;
+      item.maxDeliveryDays = subCategoryExists.maxDeliveryDays || null;
     }
   }
 
@@ -77,7 +80,7 @@ router.post('/create', auth, async (req, res) => {
     // Emit ordersUpdated event (real-time update)
     const { emitAllOrders } = require('../server');
     await emitAllOrders();
-    res.status(201).json({ message: "Order placed", order });
+  res.status(201).json({ message: "Order placed", order });
   } catch (err) {
     res.status(500).json({ message: "Error placing order", error: err.message });
   }
