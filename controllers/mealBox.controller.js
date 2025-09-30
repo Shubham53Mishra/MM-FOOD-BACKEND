@@ -502,24 +502,32 @@ exports.createMealBox = async (req, res) => {
 			itemsArr = [itemsArr];
 		}
 		// Create new MealBox
-					const mealBox = new MealBox({
-						title,
-						description,
-						minQty: Number(minQty),
-						price: Number(price),
-						minPrepareOrderDays: Number(req.body.minPrepareOrderDays),
-						maxPrepareOrderDays: Number(req.body.maxPrepareOrderDays),
-						packagingDetails,
-						sampleAvailable: sampleAvailable === 'true' || sampleAvailable === true,
-						boxImage: boxImageUrl,
-						actualImage: actualImageUrl,
-						vendor,
-						items: itemsArr
-					});
+		const mealBox = new MealBox({
+			title,
+			description,
+			minQty: Number(minQty),
+			price: Number(price),
+			minPrepareOrderDays: Number(req.body.minPrepareOrderDays),
+			maxPrepareOrderDays: Number(req.body.maxPrepareOrderDays),
+			packagingDetails,
+			sampleAvailable: sampleAvailable === 'true' || sampleAvailable === true,
+			boxImage: boxImageUrl,
+			actualImage: actualImageUrl,
+			vendor,
+			items: itemsArr
+		});
 		await mealBox.save();
-		// Populate vendor details for response
-		const populatedMealBox = await MealBox.findById(mealBox._id).populate({ path: 'vendor', select: '_id name email mobile' });
-		res.status(201).json({ success: true, message: 'MealBox created', mealBox: populatedMealBox });
+		// Build image URLs for response
+		const baseUrl = req.protocol + '://' + req.get('host');
+		const boxImageUrlRes = mealBox.boxImage ? baseUrl + '/uploads/' + mealBox.boxImage : null;
+		const actualImageUrlRes = mealBox.actualImage ? baseUrl + '/uploads/' + mealBox.actualImage : null;
+		res.status(201).json({
+			success: true,
+			message: 'Meal box created successfully',
+			mealBox,
+			boxImageUrl: boxImageUrlRes,
+			actualImageUrl: actualImageUrlRes
+		});
 	} catch (error) {
 		res.status(500).json({ success: false, message: error.message });
 	}
