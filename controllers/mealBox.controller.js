@@ -1,3 +1,41 @@
+// Create a simple (sample) meal box order with minimal fields
+exports.createSimpleMealBoxOrder = async (req, res) => {
+	try {
+		const { mealBoxId, quantity } = req.body;
+		if (!mealBoxId || !quantity) {
+			return res.status(400).json({ success: false, message: 'mealBoxId and quantity are required.' });
+		}
+		const mealBox = await require('../models/MealBox').findById(mealBoxId);
+		if (!mealBox) {
+			return res.status(404).json({ success: false, message: 'MealBox not found.' });
+		}
+		if (!mealBox.sampleAvailable) {
+			return res.status(400).json({ success: false, message: 'This meal box is not a sample/simple product.' });
+		}
+		// Use minPrepareOrderDays as default deliveryDays
+		const deliveryDays = mealBox.minPrepareOrderDays;
+		const today = new Date();
+		const deliveryDate = new Date(today.getTime() + deliveryDays * 24 * 60 * 60 * 1000).toISOString().slice(0,10);
+		// Save MealBoxOrder to DB
+		const mealBoxOrder = new (require('../models/MealBoxOrder'))({
+			mealBox: mealBox._id,
+			quantity,
+			vendor: mealBox.vendor,
+			status: 'pending',
+			deliveryDays,
+			deliveryDate,
+			isSampleOrder: true
+		});
+		await mealBoxOrder.save();
+		res.status(201).json({
+			success: true,
+			message: 'Simple meal box order created',
+			mealBoxOrder
+		});
+	} catch (error) {
+		res.status(500).json({ success: false, message: error.message });
+	}
+};
 // Get all meal boxes with sampleAvailable: true
 exports.getSampleMealBoxes = async (req, res) => {
 	try {

@@ -1,3 +1,5 @@
+// POST /api/mealbox/simple-order - create a simple (sample) meal box order
+router.post('/simple-order', mealBoxController.createSimpleMealBoxOrder);
 
 const express = require('express');
 const router = express.Router();
